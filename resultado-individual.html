@@ -107,6 +107,7 @@ a{color:inherit;}
 .card-conexao.aberto .card-conexao-corpo{max-height:400px; margin-top:14px;}
 .card-conexao-linha{font-size:13px; line-height:1.5; margin-bottom:8px;}
 .card-conexao-linha b{color:var(--branco);}
+.card-conexao-nota{color:var(--cinza-claro); opacity:.7; font-size:8.5px; margin-top:2px;}
 .card-conexao-cta{
   display:inline-block; margin-top:6px; font-size:13px; font-weight:700; color:var(--vermelho);
   text-decoration:none;
@@ -139,6 +140,7 @@ a{color:inherit;}
 .card-conexao-titulo{font-size:10px; line-height:1.7; letter-spacing:-.02em;}
 .card-conexao-sub{font-size:8.5px; line-height:1.7;}
 .card-conexao-linha{font-size:9.5px; line-height:1.9;}
+.card-conexao-nota{color:var(--cinza-claro); opacity:.7; font-size:8.5px; margin-top:2px;}
 .card-conexao-cta{font-size:9.5px;}
 .card-resumo-titulo{font-size:9px; letter-spacing:.08em;}
 .card-resumo-perfil{font-size:15px; line-height:1.5; letter-spacing:-.03em;}
@@ -187,44 +189,88 @@ function reducedMotion() {
 // Calculada em tempo de leitura a partir de quais eixos vieram certos —
 // nunca gravada no banco. Trocar nomes/descrições aqui não exige nenhuma
 // migração nem reprocessamento de dados antigos.
-const EIXOS_ORDEM = ["Produto", "Objeção", "Regra de Negócio"];
+const EIXOS_ORDEM = ["Produto", "Objeções em Vendas", "Regra de Negócio", "Cultura"];
 
 function chavePerfil(eixosCertos) {
   return EIXOS_ORDEM.filter((e) => eixosCertos.includes(e)).join("|");
 }
 
+// TAXONOMIA COMPLETA — 15 combinações
+// O quiz sorteia 3 eixos entre 4 (Produto, Objeções em Vendas, Regra de
+// Negócio, Cultura), o que gera 15 combinações de acerto distintas.
+// A versão anterior tinha 8 perfis e foi escrita quando havia 3 eixos
+// fixos, com "Objeção" no lugar de "Objeções em Vendas" — resultado: quem
+// acertasse as três podia receber o perfil de zero acertos.
+//
+// Os nomes seguem o vocabulário do consultor: cada perfil descreve uma
+// combinação de repertório, não um julgamento da pessoa.
 const TAXONOMIA_PERFIS = {
+  // ---------- nenhum acerto ----------
   "": {
     nome: "Sinapse em Formação",
-    descricao: "Você está no início dessa jornada de conexões. Cada tentativa fortalece o caminho — os próximos passos já estão mapeados abaixo.",
+    descricao: "Você está no início dessa jornada de conexões. Cada trilha percorrida fortalece o caminho — os próximos passos já estão mapeados abaixo.",
   },
-  "Produto|Objeção|Regra de Negócio": {
-    nome: "Estrategista",
-    descricao: "Você conecta produto, argumentação e regra de negócio com a mesma facilidade. Visão completa, repertório sólido.",
-  },
-  "Produto|Regra de Negócio": {
-    nome: "Especialista Técnico",
-    descricao: "Domina o produto e as regras do negócio. A argumentação diante de objeções é a sua próxima fronteira.",
-  },
-  "Objeção|Regra de Negócio": {
-    nome: "Negociador",
-    descricao: "Sabe argumentar e conhece as regras do jogo. Aprofundar o produto destrava o próximo nível.",
-  },
-  "Produto|Objeção": {
-    nome: "Comunicador",
-    descricao: "Conecta produto e argumentação com naturalidade. As regras de negócio são a próxima conexão a fortalecer.",
-  },
+
+  // ---------- 1 acerto ----------
   "Produto": {
     nome: "Conhecedor de Produto",
-    descricao: "Base sólida em produto. Objeção e regras de negócio ainda pedem reforço para completar o mapa.",
+    descricao: "Você domina o que a Ademicon oferece. Argumentação, regras do negócio e cultura são as próximas conexões a fortalecer.",
   },
-  "Objeção": {
+  "Objeções em Vendas": {
     nome: "Persuasivo",
-    descricao: "Argumenta bem diante de objeções. Produto e regras de negócio são as próximas conexões a desbloquear.",
+    descricao: "Você sabe conduzir a conversa quando o cliente hesita. Aprofundar produto, regras e cultura completa o repertório.",
   },
   "Regra de Negócio": {
     nome: "Técnico de Regras",
-    descricao: "Conhece profundamente as regras do negócio. Produto e objeção ainda têm espaço para crescer.",
+    descricao: "Você conhece o funcionamento do consórcio por dentro. Produto, argumentação e cultura ainda têm espaço para crescer.",
+  },
+  "Cultura": {
+    nome: "Guardião da Cultura",
+    descricao: "Você vive o jeito Ademicon de fazer. Produto, argumentação e regras do negócio são as próximas conexões.",
+  },
+
+  // ---------- 2 acertos ----------
+  "Produto|Objeções em Vendas": {
+    nome: "Comunicador",
+    descricao: "Você conecta o que vende com o que o cliente precisa ouvir. As regras do negócio são a próxima conexão a fortalecer.",
+  },
+  "Produto|Regra de Negócio": {
+    nome: "Especialista Técnico",
+    descricao: "Você domina o produto e as regras que o sustentam. A argumentação diante de objeções é a sua próxima fronteira.",
+  },
+  "Produto|Cultura": {
+    nome: "Embaixador do Produto",
+    descricao: "Você conhece o produto e representa bem a Ademicon. Argumentação e regras do negócio destravam o próximo nível.",
+  },
+  "Objeções em Vendas|Regra de Negócio": {
+    nome: "Negociador",
+    descricao: "Você argumenta com segurança porque conhece as regras do jogo. Aprofundar o produto amplia seu alcance.",
+  },
+  "Objeções em Vendas|Cultura": {
+    nome: "Consultor de Relação",
+    descricao: "Você constrói confiança e sabe conduzir a objeção. Produto e regras do negócio são as próximas conexões.",
+  },
+  "Regra de Negócio|Cultura": {
+    nome: "Referência Interna",
+    descricao: "Você conhece as regras e representa a cultura da casa. Produto e argumentação completam o mapa.",
+  },
+
+  // ---------- 3 acertos ----------
+  "Produto|Objeções em Vendas|Regra de Negócio": {
+    nome: "Estrategista",
+    descricao: "Você conecta produto, argumentação e regra de negócio com a mesma facilidade. Visão completa, repertório sólido.",
+  },
+  "Produto|Objeções em Vendas|Cultura": {
+    nome: "Consultor Completo",
+    descricao: "Você conhece o produto, conduz a objeção e vive a cultura. Repertório afiado do início ao fim da conversa.",
+  },
+  "Produto|Regra de Negócio|Cultura": {
+    nome: "Autoridade Técnica",
+    descricao: "Você domina produto, regras e o jeito Ademicon de atuar. Base sólida para qualquer atendimento.",
+  },
+  "Objeções em Vendas|Regra de Negócio|Cultura": {
+    nome: "Consultor de Confiança",
+    descricao: "Você argumenta com base nas regras e representa a cultura da casa. É a combinação que sustenta a relação de longo prazo.",
   },
 };
 
@@ -311,13 +357,18 @@ function renderizarResultado(dados) {
   const eixosCertos = respostas.filter((r) => r.status === "certo").map((r) => r.eixo);
   const eixosErrados = respostas.filter((r) => r.status !== "certo");
   const perfil = obterPerfil(eixosCertos);
+  // total real da rodada, lido das respostas gravadas — não fixa 3,
+  // para continuar correto se o número de perguntas mudar
+  const totalPerguntas = respostas.length || 3;
 
   // dedup de cursos recomendados entre as questões erradas (mesmo critério
   // do motor de feedback: nunca repetir o mesmo curso)
   const cursosVistos = new Set();
   const conexoes = [];
   eixosErrados.forEach((r) => {
-    const chave = r.curso_indicado || r.trilha_bumerangue || r.eixo;
+    // a TRILHA é o nome único do conteúdo; dedup por ela evita
+    // recomendar a mesma trilha duas vezes
+    const chave = r.trilha_bumerangue || r.curso_indicado || r.eixo;
     if (cursosVistos.has(chave)) return;
     cursosVistos.add(chave);
     conexoes.push(r);
@@ -334,7 +385,7 @@ function renderizarResultado(dados) {
     <div class="secao">
       <div class="eyebrow">Desempenho</div>
       <div class="metricas-grid">
-        <div class="metrica-card"><div class="metrica-valor">${dados.total_acertos}/3</div><div class="metrica-rotulo">Acertos</div></div>
+        <div class="metrica-card"><div class="metrica-valor">${dados.total_acertos}/${totalPerguntas}</div><div class="metrica-rotulo">Acertos</div></div>
         <div class="metrica-card"><div class="metrica-valor">${formatarTempo(dados.tempo_total_segundos)}</div><div class="metrica-rotulo">Tempo</div></div>
         <div class="metrica-card"><div class="metrica-valor">${dados.pontuacao}</div><div class="metrica-rotulo">Pontuação</div></div>
         <div class="metrica-card"><div class="metrica-valor">#${dados.posicao_ranking}</div><div class="metrica-rotulo">No ranking</div></div>
@@ -381,9 +432,8 @@ function renderizarResultado(dados) {
               </div>
               <div class="card-conexao-corpo">
                 <div class="card-conexao-linha">Essa resposta revela uma oportunidade de reforçar seu conhecimento em <b>${c.eixo}</b>.</div>
-                ${c.trilha_bumerangue ? `<div class="card-conexao-linha">Trilha relacionada: <b>${c.trilha_bumerangue}</b></div>` : ""}
-                ${c.curso_indicado ? `<div class="card-conexao-linha">Curso recomendado: <b>${c.curso_indicado}</b></div>` : ""}
-                ${c.link_curso ? `<a class="card-conexao-cta" href="${c.link_curso}" target="_blank" rel="noopener">Começar trilha →</a>` : ""}
+                ${(c.trilha_bumerangue || c.curso_indicado) ? `<div class="card-conexao-linha">Recomendamos refazer: <b>${c.trilha_bumerangue || c.curso_indicado}</b></div>` : ""}
+                <div class="card-conexao-linha card-conexao-nota">Acesse pela Bumerangue.</div>
               </div>
             </div>`
             )
@@ -398,7 +448,7 @@ function renderizarResultado(dados) {
       <div class="card-resumo-perfil">${perfil.nome}</div>
       <div class="card-resumo-linha">
         <div><b>${dados.pontuacao}</b>pontos</div>
-        <div><b>${dados.total_acertos}/3</b>acertos</div>
+        <div><b>${dados.total_acertos}/${totalPerguntas}</b>acertos</div>
         <div><b>#${dados.posicao_ranking}</b>ranking</div>
       </div>
     </div>
@@ -432,48 +482,232 @@ function renderizarResultado(dados) {
   $("#btnSalvarCard").addEventListener("click", () => salvarCardComoImagem(dados, perfil));
 }
 
-// ---------- geração do card colecionável como imagem (canvas, sem libs) ----------
-function salvarCardComoImagem(dados, perfil) {
+// ---------- card colecionável: espelha a tela do QR Code ----------
+// Antes o card era uma versão resumida (perfil, pontos, acertos, ranking).
+// Agora reproduz a mesma composição da tela: tipografia arcade, paleta
+// idêntica e as mesmas seções na mesma ordem — descoberta, desempenho,
+// forças, novas conexões e o resumo. A altura é calculada a partir do
+// conteúdo, então quem errou três tem um card mais alto que quem acertou
+// tudo, sem espaço vazio nem corte.
+async function salvarCardComoImagem(dados, perfil) {
+  const L = 720;              // largura lógica; a escala 2 dobra a resolução
+  const M = 48;               // margem lateral
+  const ESC = 2;
+  const FONTE = '"SinapseArcade", -apple-system, Arial, sans-serif';
+
+  // a fonte precisa estar carregada antes de medir: sem isso o canvas
+  // desenha com a fonte de fallback e o layout sai com larguras erradas
+  try {
+    if (document.fonts && document.fonts.load) {
+      await document.fonts.load('16px "SinapseArcade"');
+      await document.fonts.ready;
+    }
+  } catch (e) {}
+
+  const respostas = dados.respostas || [];
+  const eixosCertos = respostas.filter((r) => r.status === "certo").map((r) => r.eixo);
+  const eixosErrados = respostas.filter((r) => r.status !== "certo");
+  const vistos = new Set();
+  const conexoes = [];
+  eixosErrados.forEach((r) => {
+    const chave = r.trilha_bumerangue || r.curso_indicado || r.eixo;
+    if (vistos.has(chave)) return;
+    vistos.add(chave);
+    conexoes.push(r);
+  });
+
+  // ---- medição: um canvas descartável só para calcular a altura ----
+  const medidor = document.createElement("canvas").getContext("2d");
+  const quebrar = (txt, tam, larg) => {
+    medidor.font = tam + "px " + FONTE;
+    const palavras = String(txt).split(/\s+/);
+    const linhas = [];
+    let atual = "";
+    palavras.forEach((p) => {
+      const t = (atual + " " + p).trim();
+      if (medidor.measureText(t).width <= larg || !atual) atual = t;
+      else { linhas.push(atual); atual = p; }
+    });
+    if (atual) linhas.push(atual);
+    return linhas;
+  };
+
+  const largTexto = L - M * 2;
+  const lProp = quebrar(perfil.nome, 30, largTexto);
+  const lDesc = quebrar(perfil.descricao, 11, largTexto);
+  const cardsConexao = conexoes.map((c) => ({
+    dados: c,
+    linhas: quebrar(
+      "Recomendamos refazer: " + (c.trilha_bumerangue || c.curso_indicado || "conteúdo a definir"),
+      10, largTexto - 40
+    ),
+  }));
+
+  // ---- altura total ----
+  let H = 40;                                  // topo
+  H += 26;                                     // eyebrow DESCOBERTA
+  H += lProp.length * 42 + 14;                 // nome do perfil
+  H += lDesc.length * 24 + 30;                 // descrição
+  H += 26;                                     // eyebrow DESEMPENHO
+  H += 2 * 92 + 14;                            // grade 2x2 de métricas
+  if (eixosCertos.length) H += 26 + eixosCertos.length * 34 + 16;   // forças
+  if (cardsConexao.length) {
+    H += 26;
+    cardsConexao.forEach((c) => { H += c.linhas.length * 22 + 44; });
+    H += 8;
+  }
+  H += 150;                                    // resumo
+  H += 54;                                     // rodapé
+
   const canvas = document.createElement("canvas");
-  const escala = 3; // resolução maior para ficar nítido ao compartilhar
-  canvas.width = 360 * escala;
-  canvas.height = 480 * escala;
+  canvas.width = L * ESC;
+  canvas.height = H * ESC;
   const ctx = canvas.getContext("2d");
-  ctx.scale(escala, escala);
+  ctx.scale(ESC, ESC);
 
-  const grad = ctx.createLinearGradient(0, 0, 360, 480);
-  grad.addColorStop(0, "#171515");
-  grad.addColorStop(1, "#0E0D0D");
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, 360, 480);
+  // ---- fundo: mesmos gradientes da tela ----
+  ctx.fillStyle = "#0E0D0D";
+  ctx.fillRect(0, 0, L, H);
+  const brilho1 = ctx.createRadialGradient(L * 0.2, 0, 0, L * 0.2, 0, L * 0.9);
+  brilho1.addColorStop(0, "rgba(255,0,0,0.13)");
+  brilho1.addColorStop(1, "rgba(255,0,0,0)");
+  ctx.fillStyle = brilho1;
+  ctx.fillRect(0, 0, L, H);
+  const brilho2 = ctx.createRadialGradient(L, H, 0, L, H, L);
+  brilho2.addColorStop(0, "rgba(122,19,21,0.26)");
+  brilho2.addColorStop(1, "rgba(122,19,21,0)");
+  ctx.fillStyle = brilho2;
+  ctx.fillRect(0, 0, L, H);
 
-  ctx.strokeStyle = "#231F20";
-  ctx.lineWidth = 2;
-  ctx.strokeRect(10, 10, 340, 460);
+  const cartao = (x, y, w, h, r, borda, fundo) => {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+    if (fundo) { ctx.fillStyle = fundo; ctx.fill(); }
+    if (borda) { ctx.strokeStyle = borda; ctx.lineWidth = 1.5; ctx.stroke(); }
+  };
 
-  ctx.fillStyle = "#FF0000";
-  ctx.font = "bold 11px -apple-system, Arial";
-  ctx.textAlign = "center";
-  ctx.fillText("MAPA DE SINAPSES", 180, 60);
+  let y = 40;
+  ctx.textAlign = "left";
+  ctx.textBaseline = "alphabetic";
 
+  const eyebrow = (txt) => {
+    ctx.font = '11px ' + FONTE;
+    ctx.fillStyle = "#FF6B5E";
+    ctx.fillText(txt.toUpperCase(), M, y + 12);
+    y += 26;
+  };
+
+  // ---- DESCOBERTA ----
+  eyebrow("Descoberta");
+  ctx.font = '30px ' + FONTE;
   ctx.fillStyle = "#FFFFFF";
-  ctx.font = "bold 26px -apple-system, Arial";
-  ctx.fillText(perfil.nome, 180, 100);
-
-  ctx.font = "bold 34px -apple-system, Arial";
-  ctx.fillText(String(dados.pontuacao), 180, 230);
-  ctx.font = "11px -apple-system, Arial";
+  lProp.forEach((l) => { ctx.fillText(l, M, y + 28); y += 42; });
+  y += 14;
+  ctx.font = '11px ' + FONTE;
   ctx.fillStyle = "#DCDDDE";
-  ctx.fillText("PONTOS", 180, 250);
+  lDesc.forEach((l) => { ctx.fillText(l, M, y + 14); y += 24; });
+  y += 30;
 
-  ctx.font = "bold 16px -apple-system, Arial";
+  // ---- DESEMPENHO: grade 2x2 ----
+  eyebrow("Desempenho");
+  const gutter = 14;
+  const wCard = (largTexto - gutter) / 2;
+  const totalPerguntas = respostas.length || 3;
+  const metricas = [
+    [String(dados.total_acertos) + "/" + totalPerguntas, "ACERTOS"],
+    [formatarTempo(dados.tempo_total_segundos), "TEMPO"],
+    [String(dados.pontuacao), "PONTUAÇÃO"],
+    ["#" + dados.posicao_ranking, "NO RANKING"],
+  ];
+  metricas.forEach((m, i) => {
+    const cx = M + (i % 2) * (wCard + gutter);
+    const cy = y + Math.floor(i / 2) * 92;
+    cartao(cx, cy, wCard, 78, 14, "#231F20", "rgba(255,255,255,0.035)");
+    ctx.font = '24px ' + FONTE;
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fillText(m[0], cx + 18, cy + 38);
+    ctx.font = '9px ' + FONTE;
+    ctx.fillStyle = "#DCDDDE";
+    ctx.fillText(m[1], cx + 18, cy + 60);
+  });
+  y += 2 * 92 + 14;
+
+  // ---- FORÇAS ----
+  if (eixosCertos.length) {
+    eyebrow("Suas forças");
+    eixosCertos.forEach((eixo) => {
+      ctx.beginPath();
+      ctx.arc(M + 6, y + 10, 5, 0, Math.PI * 2);
+      ctx.fillStyle = "#FF0000";
+      ctx.fill();
+      ctx.font = '11px ' + FONTE;
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fillText(eixo, M + 24, y + 14);
+      // barra cheia à direita
+      cartao(L - M - 70, y + 6, 70, 6, 3, null, "#231F20");
+      cartao(L - M - 70, y + 6, 70, 6, 3, null, "#FF0000");
+      y += 34;
+    });
+    y += 16;
+  }
+
+  // ---- NOVAS CONEXÕES ----
+  if (cardsConexao.length) {
+    eyebrow("Novas conexões");
+    cardsConexao.forEach((c, i) => {
+      const alturaCard = c.linhas.length * 22 + 36;
+      cartao(M, y, largTexto, alturaCard, 14, "#231F20", "rgba(255,255,255,0.03)");
+      ctx.font = '10px ' + FONTE;
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fillText("CONEXÃO #" + String(i + 1).padStart(2, "0") + " — " + c.dados.eixo, M + 20, y + 22);
+      ctx.font = '10px ' + FONTE;
+      ctx.fillStyle = "#DCDDDE";
+      c.linhas.forEach((l, j) => ctx.fillText(l, M + 20, y + 44 + j * 22));
+      y += alturaCard + 8;
+    });
+    y += 8;
+  }
+
+  // ---- RESUMO ----
+  cartao(M, y, largTexto, 118, 18, "rgba(255,0,0,0.35)", "rgba(255,0,0,0.06)");
+  ctx.textAlign = "center";
+  const meio = L / 2;
+  ctx.font = '10px ' + FONTE;
+  ctx.fillStyle = "#DCDDDE";
+  ctx.fillText("MAPA DE SINAPSES", meio, y + 26);
+  ctx.font = '20px ' + FONTE;
   ctx.fillStyle = "#FFFFFF";
-  ctx.fillText(`${dados.total_acertos}/3 acertos`, 180, 300);
-  ctx.fillText(`#${dados.posicao_ranking} no ranking`, 180, 330);
+  ctx.fillText(perfil.nome, meio, y + 58);
+  const resumo = [
+    [String(dados.pontuacao), "pontos"],
+    [dados.total_acertos + "/" + totalPerguntas, "acertos"],
+    ["#" + dados.posicao_ranking, "ranking"],
+  ];
+  resumo.forEach((r, i) => {
+    const rx = meio + (i - 1) * 150;
+    ctx.font = '15px ' + FONTE;
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fillText(r[0], rx, y + 88);
+    ctx.font = '9px ' + FONTE;
+    ctx.fillStyle = "#DCDDDE";
+    ctx.fillText(r[1], rx, y + 106);
+  });
+  y += 150;
 
-  ctx.font = "10px -apple-system, Arial";
+  if (dados.elegivel_sorteio) {
+    ctx.font = '10px ' + FONTE;
+    ctx.fillStyle = "#FF6B5E";
+    ctx.fillText("CONCORRENDO AO SORTEIO DO DIA", meio, y - 6);
+  }
+
+  ctx.font = '9px ' + FONTE;
   ctx.fillStyle = "#414042";
-  ctx.fillText("SINAPSE COMERCIAL · ADEMICON", 180, 440);
+  ctx.fillText("SINAPSE COMERCIAL · ADEMICON", meio, H - 22);
 
   canvas.toBlob((blob) => {
     const url = URL.createObjectURL(blob);
@@ -512,10 +746,20 @@ async function iniciar() {
     </div>
   `;
 
-  if (SUPABASE_URL.indexOf("SEU-PROJETO") !== -1) {
+  // Valida URL E CHAVE. Antes checava apenas a URL: com a URL preenchida e
+  // a chave ainda no placeholder, a página se considerava configurada,
+  // chamava o Supabase com credencial inválida, recebia erro e exibia
+  // "Ainda processando" — como se o resultado estivesse a caminho. O erro
+  // real ficava invisível. Mesmo problema que já havia no quiz.
+  const urlOk = /^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/.test(String(SUPABASE_URL).trim());
+  const chaveOk = String(SUPABASE_ANON_KEY).trim().startsWith("eyJ")
+                  && String(SUPABASE_ANON_KEY).trim().length > 100;
+  if (!urlOk || !chaveOk) {
     mostrarErro(
       "Ainda não configurado",
-      "Esta página precisa da URL e da chave do Supabase preenchidas no topo do arquivo antes de funcionar.",
+      (!urlOk ? "A URL do Supabase não está preenchida corretamente. " : "") +
+      (!chaveOk ? "A chave anon do Supabase não está preenchida (ela começa com 'eyJ'). " : "") +
+      "Preencha no topo do arquivo, antes da linha 180.",
       false
     );
     return;

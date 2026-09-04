@@ -1813,6 +1813,62 @@ h1, p, .portal-linha, .pergunta-texto, .alt-no, .lgpd-texto,
   .pergunta-texto{max-width:min(1360px, 92vw); line-height:1.9;}
 }
 
+
+/* ===================================================================
+   ALINHAMENTO DO ENUNCIADO — apoio à leitura
+   O enunciado estava centralizado. Medindo o mais longo da base (200
+   caracteres, 4 linhas de 832/800/864/640px num container de 920px):
+   centralizado, cada linha começa num ponto diferente e o olho precisa
+   procurar o início a cada quebra. Justificado à esquerda, todas as
+   linhas partem da mesma margem — é o que a tipografia chama de
+   "âncora de retorno" e é o principal fator de velocidade de leitura
+   em texto de mais de duas linhas.
+
+   Fica centralizado apenas o que tem UMA linha (rótulos, contadores),
+   onde o alinhamento à esquerda criaria assimetria sem ganho.
+   =================================================================== */
+
+.pergunta-texto{
+  text-align:left;
+  /* o bloco em si continua centralizado na tela; o TEXTO dentro dele é
+     que passa a alinhar à esquerda */
+  margin-left:auto;
+  margin-right:auto;
+  /* medida ótima de leitura: entre 45 e 75 caracteres por linha. Na fonte
+     arcade a 16px, ~57 caracteres cabem em 920px. */
+  max-width:min(920px, 92vw);
+  text-wrap:pretty;         /* evita a última linha com uma palavra só */
+  hyphens:none;
+}
+
+/* alternativas já estavam à esquerda; reforça e garante o mesmo recuo
+   do enunciado, criando uma coluna de leitura contínua */
+.alt-no-texto{
+  text-align:left;
+  text-wrap:pretty;
+}
+
+/* --- distribuição vertical para enunciados de tamanhos diferentes ---
+   Antes o espaço entre enunciado e alternativas era fixo (2,2rem). Com
+   enunciado de 1 linha sobrava vazio no meio da tela; com 4 linhas ficava
+   apertado. Agora o espaçamento se adapta ao espaço disponível. */
+.tela-pergunta #conteudo{width:100%;}
+.pergunta-texto{
+  margin-bottom:clamp(1.2rem, 3.5vh, 2.6rem);
+}
+.rede-pergunta{
+  margin-top:clamp(0.4rem, 1.5vh, 1.2rem);
+}
+
+@media (max-width:520px){
+  .pergunta-texto{max-width:100%; text-align:left;}
+}
+@media (min-width:1400px){
+  /* na TV a linha pode ser mais longa sem sair da medida ótima, porque
+     a fonte também cresce */
+  .pergunta-texto{max-width:min(1360px, 90vw);}
+}
+
 /* ===================================================================
    MALHA NEURAL (camada de rede ramificada, gerada em runtime)
    Profundidade construída só com opacidade/blur/espessura — o cinza
@@ -2445,6 +2501,20 @@ const CONFIG = {
   // quanto tempo a palavra "COMEÇAR" fica na tela antes da primeira
   // pergunta. Era 550ms, curto demais para ler em fonte pixelada.
   DURACAO_COMECAR_MS: 1100,
+
+  // ---- trilha sonora (gerada em código, sem arquivo de áudio) ----
+  // Toca durante as perguntas e para nas telas de leitura/feedback.
+  // Volume deliberadamente baixo: a trilha conviverá com a leitura do
+  // enunciado e, num estande, com ~1500 repetições por dia para a equipe.
+  TRILHA_SONORA_ATIVA: true,
+  // Calibrado para time de vendas em estande: presente e com energia.
+  // 128 BPM é o andamento de música de academia/pop dance — a faixa onde
+  // o corpo acompanha o pulso sem parecer corrida.
+  TRILHA_BPM: 128,
+  // 0.115 é o dobro do valor discreto anterior. Se no estande ficar alto
+  // demais em relação à narração e aos efeitos, este é o número a baixar.
+  TRILHA_VOLUME: 0.115,
+  TRILHA_SEGUNDOS_FINAIS: 12, // reta final um pouco mais longa: 12s
   TEMPO_CONTAGEM_REGRESSIVA: 5, // segundos, antes da pergunta 1
   ADMIN_PIN: "2026",
   CHAVE_ARMAZENAMENTO: "sinapse_comercial_participantes_v1",
@@ -2493,7 +2563,7 @@ const CONFIG = {
 const QUESTOES = [
   {
     "id": "1",
-    "pergunta": "Em quais situações o Seguro Prestamista da Ademicon pode quitar a dívida do cliente?",
+    "pergunta": "Em quais situações o Seguro Prestamista Ademicon pode quitar a dívida do cliente?",
     "alternativas": {
       "A": "Somente em caso de morte natural.",
       "B": "Morte natural, morte acidental ou invalidez total permanente por acidente.",
@@ -2697,7 +2767,7 @@ const QUESTOES = [
   },
   {
     "id": "19",
-    "pergunta": "Em que ano e sob qual nome a empresa que deu origem à Ademicon foi fundada?",
+    "pergunta": "Você sabe como essa história começou? Em que ano e com qual nome nasceu a empresa que deu origem à Ademicon?",
     "alternativas": {
       "A": "1991, como Ademilar, pioneira no consórcio de imóveis no Brasil.",
       "B": "2008, já com o nome Ademicon, logo após a sanção da Lei do Consórcio.",
@@ -2714,11 +2784,11 @@ const QUESTOES = [
   },
   {
     "id": "20",
-    "pergunta": "A marca Ademicon, como existe hoje, nasceu de qual movimento societário?",
+    "pergunta": "E como a Ademilar se transformou na Ademicon que conhecemos hoje? Qual movimento marcou essa nova fase da nossa história?",
     "alternativas": {
-      "A": "Da fusão entre a Ademilar (consórcio de imóveis) e a Conseg (consórcio de veículos), consolidada em 2021.",
-      "B": "Da aquisição da Ademilar por um banco múltiplo internacional.",
-      "C": "Da abertura de capital (IPO) da Ademilar na bolsa de valores brasileira."
+      "A": "Da fusão entre a Ademilar, especializada em consórcio de imóveis, e a Conseg, voltada a veículos, realizada em 2020.",
+      "B": "Da aquisição da Ademilar por uma instituição financeira para ampliar a oferta de crédito.",
+      "C": "Da abertura de capital da Ademilar para financiar a expansão nacional da empresa."
     },
     "resposta_correta": "A",
     "eixo": "Cultura",
@@ -2731,7 +2801,7 @@ const QUESTOES = [
   },
   {
     "id": "21",
-    "pergunta": "Atualmente, qual posição a Ademicon ocupa no mercado brasileiro de consórcios?",
+    "pergunta": "Quando você apresenta a Ademicon a alguém, qual posição da empresa no mercado brasileiro de consórcios reforça a força da nossa trajetória?",
     "alternativas": {
       "A": "É a maior administradora independente de consórcios do Brasil em créditos ativos.",
       "B": "É a única administradora de consórcios autorizada a operar no país.",
@@ -2765,7 +2835,7 @@ const QUESTOES = [
   },
   {
     "id": "23",
-    "pergunta": "Considere a seguinte afirmação: “Segundo a Lei 11.795/2008, o consórcio é considerado um instrumento de progresso social, pois possibilita o acesso ao consumo planejado de bens e serviços.”\nCom base nessa lei, qual característica diferencia principalmente o consórcio do financiamento?",
+    "pergunta": "Se um cliente estiver comparando consórcio e financiamento, qual diferença você destacaria para mostrar como o consórcio funciona?",
     "alternativas": {
       "A": "O prazo máximo de 35 anos.",
       "B": "A exigência de entrada imediata.",
@@ -2850,7 +2920,7 @@ const QUESTOES = [
   },
   {
     "id": "28",
-    "pergunta": "Considere a seguinte afirmação: “O consórcio é vantajoso mesmo em cenários de juros baixos, pois não cobra juros.”\nQue benefício esse diferencial reforça?",
+    "pergunta": "Mesmo quando os juros do mercado estão baixos, qual benefício do consórcio ajuda o cliente a ter mais previsibilidade no planejamento?",
     "alternativas": {
       "A": "A necessidade de entrada obrigatória.",
       "B": "O vínculo bancário da operação.",
@@ -2867,7 +2937,7 @@ const QUESTOES = [
   },
   {
     "id": "29",
-    "pergunta": "Considere a seguinte afirmação: “O consórcio é regulado e fiscalizado pelo Banco Central.”\nO que essa regulação garante aos participantes?",
+    "pergunta": "Se o cliente perguntar se o consórcio é uma opção segura, o que a regulamentação pelo Banco Central garante a ele?",
     "alternativas": {
       "A": "Redução automática das parcelas.",
       "B": "Isenção de taxa de administração.",
@@ -2884,7 +2954,7 @@ const QUESTOES = [
   },
   {
     "id": "30",
-    "pergunta": "Considere a seguinte afirmação: “O consórcio é considerado uma ferramenta de educação financeira, pois exige disciplina de poupança.”\nA qual conceito esse aspecto está ligado?",
+    "pergunta": "Quando o cliente se organiza para conquistar um objetivo sem comprometer o orçamento, qual conceito financeiro está colocando em prática?",
     "alternativas": {
       "A": "Consumo imediato.",
       "B": "Endividamento compulsório.",
@@ -2901,7 +2971,7 @@ const QUESTOES = [
   },
   {
     "id": "31",
-    "pergunta": "Considere a seguinte afirmação: “O consórcio protege o poder de compra do cliente, pois o crédito é corrigido, acompanhando a inflação.”\nQue benefício essa característica garante?",
+    "pergunta": "Imagine que o cliente seja contemplado depois de um período de inflação. O que a atualização do crédito ajuda a preservar?",
     "alternativas": {
       "A": "Redução automática da dívida total.",
       "B": "Aumento das parcelas sem limite.",
@@ -2918,7 +2988,7 @@ const QUESTOES = [
   },
   {
     "id": "32",
-    "pergunta": "Considere a seguinte afirmação: “O consórcio pode ser usado como estratégia de investimento, e não apenas para consumo.”\nNesse caso, qual benefício o consórcio oferece?",
+    "pergunta": "Se o cliente quiser usar o consórcio para gerar renda e ampliar o patrimônio, qual benefício dessa estratégia você pode apresentar?",
     "alternativas": {
       "A": "Isenção fiscal.",
       "B": "Juros reduzidos.",
@@ -2935,7 +3005,7 @@ const QUESTOES = [
   },
   {
     "id": "33",
-    "pergunta": "Considere a seguinte afirmação: “O consórcio imobiliário é versátil, permitindo compra, construção, reforma e até quitação de financiamento.”\nA qual característica esse aspecto está relacionado?",
+    "pergunta": "Seu cliente quer comprar, construir, reformar ou até quitar um financiamento. Que característica do consórcio imobiliário permite tantas possibilidades?",
     "alternativas": {
       "A": "Exclusividade em imóveis residenciais.",
       "B": "Isenção de seguros obrigatórios.",
@@ -2952,7 +3022,7 @@ const QUESTOES = [
   },
   {
     "id": "34",
-    "pergunta": "Considere a seguinte afirmação: “O consórcio de veículos atende desde motocicletas até caminhões pesados.”\nO que essa abrangência demonstra?",
+    "pergunta": "Do cliente que busca uma motocicleta àquele que precisa de um caminhão, o que essa variedade mostra sobre o consórcio de veículos?",
     "alternativas": {
       "A": "Limitação da modalidade.",
       "B": "Obrigatoriedade de entrada.",
@@ -2969,7 +3039,7 @@ const QUESTOES = [
   },
   {
     "id": "35",
-    "pergunta": "Considere a seguinte afirmação: “O consórcio de serviços permite realizar viagens, estudos e até procedimentos médicos.”\nO que essa possibilidade representa?",
+    "pergunta": "Viagem, curso ou procedimento médico: o que essas possibilidades mostram sobre o alcance do consórcio de serviços?",
     "alternativas": {
       "A": "Limitação da modalidade.",
       "B": "Exclusividade para pessoas jurídicas.",
@@ -2986,11 +3056,11 @@ const QUESTOES = [
   },
   {
     "id": "36",
-    "pergunta": "Considere a seguinte afirmação: “O consultor de consórcio deve ter postura consultiva, entendendo as necessidades do cliente.”\nQue resultado esse comportamento tende a gerar?",
+    "pergunta": "No seu dia a dia com o cliente, o que acontece quando você escuta de verdade as necessidades dele e atua de forma consultiva?",
     "alternativas": {
-      "A": "Vendas rápidas sem análise.",
-      "B": "Redução do ticket médio.",
-      "C": "Relacionamento de confiança e fidelização."
+      "A": "Uma venda imediata, mesmo sem avaliar se a solução atende ao perfil do cliente.",
+      "B": "Uma abordagem padronizada, direcionada apenas às características do produto.",
+      "C": "Um relacionamento de confiança, com maior possibilidade de fidelização."
     },
     "resposta_correta": "C",
     "eixo": "Cultura",
@@ -3003,11 +3073,11 @@ const QUESTOES = [
   },
   {
     "id": "37",
-    "pergunta": "Considere a seguinte afirmação: “O consultor de consórcio deve atuar de forma consultiva, compreendendo os objetivos do cliente antes de oferecer o grupo ideal.”\nQue resultado essa abordagem tende a promover?",
+    "pergunta": "Antes de indicar um grupo, você procura entender os sonhos e objetivos do cliente. Que resultado essa proximidade tende a construir?",
     "alternativas": {
-      "A": "Vendas rápidas sem necessidade de análise.",
-      "B": "Aumento de burocracia para o cliente.",
-      "C": "Relacionamentos de confiança e fidelização."
+      "A": "Uma oferta mais rápida, baseada somente no produto disponível no momento.",
+      "B": "Um processo mais burocrático, com menos autonomia para o cliente.",
+      "C": "Relacionamentos de confiança e maior possibilidade de fidelização."
     },
     "resposta_correta": "C",
     "eixo": "Cultura",
@@ -3054,7 +3124,7 @@ const QUESTOES = [
   },
   {
     "id": "40",
-    "pergunta": "Considere a seguinte afirmação: “No consórcio, o crédito é atualizado, protegendo o poder de compra do cliente.”\nQue benefício esse mecanismo garante?",
+    "pergunta": "Se o cliente estiver preocupado com a inflação, qual benefício da atualização do crédito você pode explicar para tranquilizá-lo?",
     "alternativas": {
       "A": "Eliminação da taxa de administração.",
       "B": "Redução nominal das parcelas.",
@@ -3071,7 +3141,7 @@ const QUESTOES = [
   },
   {
     "id": "41",
-    "pergunta": "Considere a seguinte afirmação: “No consórcio, a contemplação é o momento em que o participante recebe o crédito contratado.”\nDe quais formas esse processo pode ocorrer?",
+    "pergunta": "Se o cliente perguntar como poderá ser contemplado e receber o crédito, quais possibilidades você deve apresentar?",
     "alternativas": {
       "A": "Amortização automática.",
       "B": "Financiamento ou subsídio governamental.",
@@ -3156,7 +3226,7 @@ const QUESTOES = [
   },
   {
     "id": "46",
-    "pergunta": "Considere a seguinte afirmação: “A taxa de administração remunera a administradora pelos serviços prestados.”\nNo modelo de consórcio, essa taxa substitui o quê?",
+    "pergunta": "Ao explicar que a taxa de administração remunera os serviços da administradora, qual custo típico do financiamento você deve diferenciar dela?",
     "alternativas": {
       "A": "Impostos estaduais.",
       "B": "Seguros obrigatórios.",
@@ -3173,7 +3243,7 @@ const QUESTOES = [
   },
   {
     "id": "47",
-    "pergunta": "Considere a seguinte afirmação: “A aposentadoria imobiliária é uma estratégia utilizada por clientes que formam patrimônio e, futuramente, vivem da renda de aluguéis.”\nA qual conceito econômico essa prática está mais relacionada?",
+    "pergunta": "Se o cliente usar imóveis adquiridos por consórcio para gerar renda ao longo do tempo, a qual estratégia econômica isso está relacionado?",
     "alternativas": {
       "A": "Alavancagem de crédito bancário.",
       "B": "Consumo imediato.",
@@ -3190,7 +3260,7 @@ const QUESTOES = [
   },
   {
     "id": "48",
-    "pergunta": "No Brasil, quem regula e fiscaliza as administradoras de consórcio no Brasil?",
+    "pergunta": "Quando o cliente busca segurança antes de contratar, qual órgão você pode citar como responsável por regular e fiscalizar as administradoras de consórcio?",
     "alternativas": {
       "A": "COAF.",
       "B": "Receita Federal.",
@@ -3241,7 +3311,7 @@ const QUESTOES = [
   },
   {
     "id": "51",
-    "pergunta": "Na prática, qual é a principal diferença entre consórcio e financiamento?",
+    "pergunta": "Na conversa com um cliente que também avalia financiamento, qual diferença essencial do consórcio você deve destacar?",
     "alternativas": {
       "A": "No financiamento, não há necessidade de entrada.",
       "B": "No consórcio, paga-se juros sobre o saldo.",
@@ -3258,7 +3328,7 @@ const QUESTOES = [
   },
   {
     "id": "52",
-    "pergunta": "Qual é a principal vantagem que diferencia o consórcio de um financiamento tradicional?",
+    "pergunta": "Se o cliente quer realizar um plano com mais economia, qual vantagem do consórcio mais se destaca em relação ao financiamento tradicional?",
     "alternativas": {
       "A": "Maior prazo de pagamento.",
       "B": "Entrada obrigatória.",
@@ -3275,7 +3345,7 @@ const QUESTOES = [
   },
   {
     "id": "53",
-    "pergunta": "Qual vantagem o consórcio oferece mesmo em cenários de juros baixos no mercado?",
+    "pergunta": "Mesmo com juros de mercado mais baixos, qual vantagem do consórcio ainda pode fazer sentido para o planejamento do cliente?",
     "alternativas": {
       "A": "Parcelas fixas.",
       "B": "Carência para contemplação.",
@@ -3377,7 +3447,7 @@ const QUESTOES = [
   },
   {
     "id": "59",
-    "pergunta": "Quais são os quatro pilares da cultura da Ademicon?",
+    "pergunta": "Para viver a cultura Ademicon no dia a dia, quais são os quatro pilares que orientam o nosso jeito de pensar e agir?",
     "alternativas": {
       "A": "Pensamento Crítico, Inovação, Ética e Proatividade.",
       "B": "Sonhos, Coragem, Persistência e Dedicação.",
@@ -3496,7 +3566,7 @@ const QUESTOES = [
   },
   {
     "id": "66",
-    "pergunta": "No consórcio, de quais duas formas pode ocorrer a contemplação?",
+    "pergunta": "Se o cliente perguntar como poderá ser contemplado no consórcio, quais são as duas formas que você deve apresentar?",
     "alternativas": {
       "A": "Financiamento e sorteio.",
       "B": "Pagamento antecipado e lance.",
@@ -3530,7 +3600,7 @@ const QUESTOES = [
   },
   {
     "id": "68",
-    "pergunta": "Considere a seguinte afirmação: “O consórcio é uma modalidade genuinamente brasileira, criada como resposta à dificuldade de acesso ao crédito.”\nO que isso revela sobre o papel do consórcio no sistema financeiro nacional?",
+    "pergunta": "Quando o consórcio amplia o acesso ao crédito e permite que mais pessoas realizem seus planos, qual papel ele cumpre na economia?",
     "alternativas": {
       "A": "É uma alternativa elitizada.",
       "B": "Foi criado como produto internacional adaptado.",
@@ -3547,7 +3617,7 @@ const QUESTOES = [
   },
   {
     "id": "69",
-    "pergunta": "Considere a seguinte afirmação: “O consórcio de serviços permite que clientes realizem viagens, festas ou procedimentos estéticos por meio de crédito parcelado.”\nO que esse produto representa?",
+    "pergunta": "Se o cliente quer realizar uma viagem, uma festa ou um procedimento estético de forma planejada, o que o consórcio de serviços representa?",
     "alternativas": {
       "A": "Uma inovação exclusiva da Ademicon em 2020.",
       "B": "Uma alternativa apenas para pessoas jurídicas.",
@@ -3564,7 +3634,7 @@ const QUESTOES = [
   },
   {
     "id": "70",
-    "pergunta": "Considere a seguinte afirmação: “O consórcio de imóveis pode ser usado inclusive para compra de imóveis no exterior.”\nO que essa possibilidade representa?",
+    "pergunta": "Se o cliente sonha em adquirir um imóvel no exterior, qual característica do consórcio imobiliário torna essa possibilidade viável?",
     "alternativas": {
       "A": "Necessidade de aval internacional.",
       "B": "Exclusividade de clientes premium.",
@@ -3581,7 +3651,7 @@ const QUESTOES = [
   },
   {
     "id": "71",
-    "pergunta": "Considere a seguinte afirmação: “No consórcio, a contemplação pode ocorrer por sorteio ou lance, o que garante previsibilidade e democratização entre os participantes.”\nNa prática, qual é a principal vantagem desse modelo?",
+    "pergunta": "Ao explicar que a contemplação pode acontecer por sorteio ou lance, qual vantagem desse modelo você deve reforçar para o cliente?",
     "alternativas": {
       "A": "Parcelas fixas até o final do contrato.",
       "B": "Garantia de contemplação imediata.",
@@ -3697,6 +3767,57 @@ const QUESTOES = [
     "curso_indicado": "Curso - Tchan das Vendas",
     "link_curso": null,
     "status": "Aprovada"
+  },
+  {
+    "id": "78",
+    "pergunta": "Quando você olha para o começo da nossa história, qual propósito fez os fundadores acreditarem no consórcio e iniciar essa jornada?",
+    "alternativas": {
+      "A": "Democratizar o acesso ao crédito e ajudar as pessoas a realizarem seus sonhos.",
+      "B": "Ampliar a oferta de crédito bancário para empresas do setor imobiliário.",
+      "C": "Criar uma modalidade de financiamento com juros reduzidos para imóveis."
+    },
+    "resposta_correta": "A",
+    "eixo": "Cultura",
+    "nivel_dificuldade": "Médio",
+    "peso": 30,
+    "trilha_bumerangue": "Trilha: Consultor PRO",
+    "curso_indicado": "Trilha: Consultor PRO",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "79",
+    "pergunta": "Você sabe qual foi a virada de chave que abriu espaço para mais empreendedores fazerem parte da nossa história e acelerou o crescimento da Ademicon?",
+    "alternativas": {
+      "A": "A concentração das operações em uma única estrutura própria.",
+      "B": "O modelo de licenciamento de marca, que permitiu a empreendedores abrir suas próprias unidades.",
+      "C": "A expansão baseada exclusivamente em parcerias com instituições financeiras."
+    },
+    "resposta_correta": "B",
+    "eixo": "Cultura",
+    "nivel_dificuldade": "Médio",
+    "peso": 30,
+    "trilha_bumerangue": "Trilha: Consultor PRO",
+    "curso_indicado": "Trilha: Consultor PRO",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "80",
+    "pergunta": "Consórcio, crédito ou administração: o que une todas as frentes da Ademicon e dá sentido ao que fazemos todos os dias?",
+    "alternativas": {
+      "A": "O foco em ampliar a oferta de produtos financeiros para grandes empresas.",
+      "B": "A gestão centralizada de todas as operações e unidades da rede.",
+      "C": "O fato de serem construídas por pessoas que realizam."
+    },
+    "resposta_correta": "C",
+    "eixo": "Cultura",
+    "nivel_dificuldade": "Fácil",
+    "peso": 20,
+    "trilha_bumerangue": "Trilha: Consultor PRO",
+    "curso_indicado": "Trilha: Consultor PRO",
+    "link_curso": null,
+    "status": "Aprovada"
   }
 ];
 
@@ -3785,7 +3906,7 @@ function iconeSVGAtivacao(sufixo) {
 // ---------------------------------------------------------------
 // estado da aplicação
 // ---------------------------------------------------------------
-const ESTADO = {
+var ESTADO = {
   tela: "inicial",
   participante: null,
   perguntas: [],
@@ -3861,7 +3982,17 @@ function emailValido(v) {
 }
 
 function telefoneValido(v) {
-  return limparCPF(v).length >= 10;
+  // Regra específica de CELULAR, não de telefone qualquer: o contato do
+  // sorteio será por WhatsApp, e um fixo inviabilizaria o contato.
+  // Formato brasileiro: 11 dígitos (2 de DDD + 9 + 8 dígitos).
+  // O nono dígito é sempre 9 em celulares desde 2016.
+  const n = limparCPF(v);
+  if (n.length !== 11) return false;
+  const ddd = parseInt(n.slice(0, 2), 10);
+  if (ddd < 11 || ddd > 99) return false;      // DDDs válidos no Brasil
+  if (n[2] !== "9") return false;               // celular sempre começa com 9
+  if (/^(\d)\1{10}$/.test(n)) return false;    // rejeita 99999999999
+  return true;
 }
 
 function formatarTempo(segundosTotais) {
@@ -4831,10 +4962,201 @@ function iniciarAudioSeNecessario() {
   }
 }
 
+// ============================================================================
+// TRILHA SONORA — chiptune gerada em tempo real
+// ============================================================================
+// Sem arquivo de áudio: as notas são sintetizadas pelo mesmo motor Web Audio
+// que já produz os blips e o pad da narração. Isso mantém o projeto
+// offline-first, não adiciona nenhum KB ao arquivo e elimina a questão de
+// licença que uma trilha de jogo comercial traria.
+//
+// Decisão de composição: a trilha precisa conviver com LEITURA. O
+// participante tem ~40 palavras para ler em 45 segundos, em fonte pixelada.
+// Melodia marcada competiria com a compreensão, então a base é de baixa
+// saliência — baixo pulsante e arpejo em notas longas, sem tema cantável.
+// A intensidade sobe só nos últimos segundos, quando a decisão já foi
+// tomada e a urgência ajuda em vez de atrapalhar.
+//
+// Escala: menor pentatônica em Lá (A minor pentatonic). Escolhida porque
+// não tem intervalos dissonantes — em loop longo, qualquer atrito
+// harmônico vira incômodo depois da centésima repetição. Com ~6000
+// participações em 3 dias, a equipe do estande vai ouvir isso ~1500 vezes
+// por dia; a trilha foi feita para desaparecer, não para impressionar.
+// ============================================================================
+
+var TRILHA = {
+  ativa: false,
+  timerId: null,
+  passo: 0,
+  nos: [],          // osciladores contínuos, para desligar depois
+  intensa: false,
+};
+
+// Lá menor pentatônica em três oitavas (Hz)
+const NOTAS = {
+  baixo:  [55.00, 65.41, 73.42, 82.41, 98.00],           // A1 C2 D2 E2 G2
+  arpejo: [220.00, 261.63, 293.66, 329.63, 392.00],      // A3 C4 D4 E4 G4
+  agudo:  [440.00, 523.25, 587.33, 659.25, 783.99],      // A4 C5 D5 E5 G5
+};
+
+// FRASE DE 8 COMPASSOS. A 128 BPM cada compasso dura 1,88s, então 8
+// compassos dão ~15s de frase e ~3 repetições numa questão de 45s. Com a
+// trilha mais presente, repetição curta incomodaria mais do que quando ela
+// era discreta — por isso a frase dobrou de tamanho.
+//
+// Composição para time de vendas: baixo marcando todos os tempos (o que dá
+// a sensação de "andar para frente"), melodia com gancho reconhecível no
+// agudo, e percussão em padrão de kick/snare em vez de só marcação.
+const PADRAO_BAIXO = [
+  [0,null,0,null, 2,null,2,null, 3,null,3,null, 1,null,1,null],
+  [0,null,0,null, 2,null,2,null, 4,null,4,null, 2,null,2,null],
+  [1,null,1,null, 3,null,3,null, 0,null,0,null, 2,null,2,null],
+  [0,null,0,null, 0,null,0,null, 4,null,4,2,    3,null,2,null],
+  [2,null,2,null, 4,null,4,null, 3,null,3,null, 1,null,1,null],
+  [0,null,0,null, 3,null,3,null, 2,null,2,null, 4,null,4,null],
+  [1,null,1,null, 2,null,2,null, 3,null,3,null, 4,null,4,null],
+  [0,null,4,null, 3,null,2,null, 1,null,0,null, 2,null,3,4],   // virada que devolve ao início
+];
+const PADRAO_ARPEJO = [
+  [null,2,null,4, null,2,null,3, null,4,null,2, null,3,null,1],
+  [null,3,null,1, null,4,null,2, null,3,null,4, null,2,null,3],
+  [null,4,null,2, null,3,null,1, null,2,null,4, null,1,null,2],
+  [null,2,null,3, null,4,null,2, null,1,null,3, null,4,null,2],
+  [null,1,null,3, null,2,null,4, null,3,null,1, null,2,null,4],
+  [null,4,null,3, null,2,null,1, null,4,null,3, null,2,null,1],
+  [null,2,null,4, null,1,null,3, null,4,null,2, null,3,null,4],
+  [null,3,null,2, null,1,null,0, null,2,null,3, null,4,null,2],
+];
+// gancho melódico: a mesma figura volta nos compassos 1, 3, 5 e 7, o que
+// torna a trilha reconhecível sem virar melodia longa demais
+const PADRAO_AGUDO = [
+  [0,null,null,2,    4,null,null,null, 3,null,2,null,    null,null,null,null],
+  [null,null,null,null, null,null,4,null, null,null,null,null, 2,null,null,null],
+  [0,null,null,2,    4,null,null,null, 3,null,2,null,    null,null,null,null],
+  [null,null,4,null, null,3,null,null, null,null,2,null, null,null,4,null],
+  [0,null,null,2,    4,null,null,null, 4,null,3,null,    null,null,null,null],
+  [null,null,null,3, null,null,null,2, null,null,null,4, null,null,null,null],
+  [0,null,null,2,    4,null,null,null, 3,null,2,null,    null,null,null,null],
+  [4,null,3,null,    2,null,1,null,    0,null,null,null, null,null,null,null],
+];
+
+function notaTrilha(freq, dur, tipo, vol, atraso) {
+  if (!AUDIO_CTX || AUDIO_MUTADO) return;
+  try {
+    const t0 = AUDIO_CTX.currentTime + (atraso || 0);
+    const osc = AUDIO_CTX.createOscillator();
+    const gain = AUDIO_CTX.createGain();
+    const filtro = AUDIO_CTX.createBiquadFilter();
+
+    osc.type = tipo;
+    osc.frequency.setValueAtTime(freq, t0);
+
+    // passa-baixa suave: tira o brilho agressivo da onda quadrada, que em
+    // loop longo é a principal causa de fadiga auditiva
+    filtro.type = "lowpass";
+    // filtro mais aberto que na versão discreta: deixa o brilho do
+    // chiptune passar, que é o que dá a sensação de energia
+    filtro.frequency.setValueAtTime(tipo === "square" ? 3200 : 1400, t0);
+    filtro.Q.value = 1;
+
+    // envelope curto com decaimento: dá o caráter percussivo de chiptune
+    gain.gain.setValueAtTime(0.0001, t0);
+    gain.gain.linearRampToValueAtTime(vol, t0 + 0.012);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+
+    osc.connect(filtro);
+    filtro.connect(gain);
+    gain.connect(AUDIO_MASTER);
+    osc.start(t0);
+    osc.stop(t0 + dur + 0.02);
+  } catch (e) {}
+}
+
+// percussão sintética: ruído filtrado, sem sample
+function percussaoTrilha(agudo, vol, atraso) {
+  if (!AUDIO_CTX || AUDIO_MUTADO) return;
+  try {
+    const t0 = AUDIO_CTX.currentTime + (atraso || 0);
+    const dur = agudo ? 0.05 : 0.11;
+    const buffer = AUDIO_CTX.createBuffer(1, Math.ceil(AUDIO_CTX.sampleRate * dur), AUDIO_CTX.sampleRate);
+    const dados = buffer.getChannelData(0);
+    for (let i = 0; i < dados.length; i++) {
+      // ruído com decaimento exponencial
+      dados[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / dados.length, agudo ? 3 : 1.6);
+    }
+    const src = AUDIO_CTX.createBufferSource();
+    src.buffer = buffer;
+    const filtro = AUDIO_CTX.createBiquadFilter();
+    filtro.type = agudo ? "highpass" : "lowpass";
+    filtro.frequency.value = agudo ? 6000 : 180;
+    const gain = AUDIO_CTX.createGain();
+    gain.gain.value = vol;
+    src.connect(filtro); filtro.connect(gain); gain.connect(AUDIO_MASTER);
+    src.start(t0);
+  } catch (e) {}
+}
+
+function iniciarTrilha() {
+  if (TRILHA.ativa || !AUDIO_CTX || AUDIO_MUTADO) return;
+  if (!CONFIG.TRILHA_SONORA_ATIVA) return;
+  TRILHA.ativa = true;
+  TRILHA.passo = 0;
+  TRILHA.intensa = false;
+
+  const msPorPasso = 60000 / CONFIG.TRILHA_BPM / 4; // semicolcheia
+
+  TRILHA.timerId = setInterval(() => {
+    if (AUDIO_MUTADO) return;
+    const compasso = Math.floor(TRILHA.passo / 16) % 8;
+    const p = TRILHA.passo % 16;
+    const vol = CONFIG.TRILHA_VOLUME * (TRILHA.intensa ? 1.55 : 1);
+
+    // --- baixo: sustenta o pulso, é o que mais se percebe ---
+    const ib = PADRAO_BAIXO[compasso][p];
+    if (ib !== null) notaTrilha(NOTAS.baixo[ib], 0.30, "triangle", vol * 0.85, 0);
+
+    // --- arpejo: preenche sem criar melodia memorável ---
+    const ia = PADRAO_ARPEJO[compasso][p];
+    if (ia !== null) notaTrilha(NOTAS.arpejo[ia], 0.22, "square", vol * 0.28, 0);
+
+    // --- agudo: pontua o fim de frase, ausente no 1º compasso ---
+    const ig = PADRAO_AGUDO[compasso][p];
+    if (ig !== null) notaTrilha(NOTAS.agudo[ig], 0.16, "square", vol * 0.16, 0);
+
+    // --- percussão em padrão de kick/snare, não só marcação ---
+    // bumbo nos tempos 1 e 3, caixa nos 2 e 4, chimbal nas semicolcheias
+    // ímpares: é o groove que dá sensação de avanço
+    if (p === 0 || p === 6 || p === 8 || p === 14) percussaoTrilha(false, vol * 0.7, 0);
+    if (p === 4 || p === 12) percussaoTrilha(true, vol * 0.34, 0);
+    if (p % 2 === 0) percussaoTrilha(true, vol * 0.13, 0);
+
+    // no modo intenso o chimbal dobra e a caixa ganha contratempo
+    if (TRILHA.intensa) {
+      percussaoTrilha(true, vol * 0.1, msPorPasso / 2000);
+      if (p === 10) percussaoTrilha(true, vol * 0.3, 0);
+    }
+
+    TRILHA.passo++;
+  }, msPorPasso);
+}
+
+function pararTrilha() {
+  if (TRILHA.timerId) clearInterval(TRILHA.timerId);
+  TRILHA.timerId = null;
+  TRILHA.ativa = false;
+  TRILHA.intensa = false;
+}
+
+// chamado quando o timer da pergunta entra na reta final
+function intensificarTrilha() {
+  TRILHA.intensa = true;
+}
+
 function alternarMudo() {
   AUDIO_MUTADO = !AUDIO_MUTADO;
   salvarPreferenciaAudio();
   if (AUDIO_MASTER) AUDIO_MASTER.gain.value = AUDIO_MUTADO ? 0 : 0.42;
+  if (AUDIO_MUTADO) pararTrilha();
   const btn = $("#btnMudo");
   if (btn) btn.textContent = AUDIO_MUTADO ? "🔇" : "🔊";
   if (AUDIO_MUTADO && window.speechSynthesis) {
@@ -5149,11 +5471,22 @@ function comHoverSutil(el) {
 // ---------------------------------------------------------------
 function conteudoModalFeedback(correta, tempoEsgotado) {
   const idx = ESTADO.indiceAtual;
+  // A participação é ÚNICA por CPF e a rodada tem 3 perguntas. Na última,
+  // qualquer texto que aponte para frente ("a próxima pode ser a certa",
+  // "ainda temos desafios pela frente", "nova tentativa") é factualmente
+  // errado — não existe próxima pergunta nem nova tentativa. Por isso as
+  // mensagens são separadas entre rodada em andamento e última questão.
+  const ehUltima = ESTADO.indiceAtual >= ESTADO.perguntas.length - 1;
 
   if (tempoEsgotado) {
-    return { icone: ICONE_RELOGIO_SVG, titulo: "O TEMPO PASSOU", corpo: "Essa conexão não deu tempo — mas a ideia continua. Vamos para a próxima.", classe: "neutro" };
+    return ehUltima
+      ? { icone: ICONE_RELOGIO_SVG, titulo: "O TEMPO PASSOU", corpo: "Essa conexão não deu tempo. Vamos ver como ficou sua rede.", classe: "neutro" }
+      : { icone: ICONE_RELOGIO_SVG, titulo: "O TEMPO PASSOU", corpo: "Essa conexão não deu tempo — mas a ideia continua. Vamos para a próxima.", classe: "neutro" };
   }
+
   if (correta) {
+    // acerto não precisa de variação por ser a última: elogiar o acerto
+    // funciona igual nos dois casos
     const pool = [
       { icone: ICONE_RAIO_SVG, titulo: "CONEXÃO ATIVADA!", corpo: "Sua leitura comercial foi certeira." },
       { icone: ICONE_CONEXAO_SVG, titulo: "SINAPSE EM ALTA!", corpo: "Esse repertório funcionou na prática." },
@@ -5161,10 +5494,21 @@ function conteudoModalFeedback(correta, tempoEsgotado) {
     ];
     return { ...pool[idx % pool.length], classe: "positivo" };
   }
+
+  // erro na ÚLTIMA questão: encerra sem prometer continuidade
+  if (ehUltima) {
+    const poolUltima = [
+      { icone: ICONE_CEREBRO_SVG, titulo: "CONEXÃO A REFORÇAR", corpo: "Essa passou perto. Já preparamos onde você pode fortalecer." },
+      { icone: ICONE_LAMPADA_SVG, titulo: "PONTO IDENTIFICADO", corpo: "Mapeamos essa conexão para o seu resultado." },
+    ];
+    return { ...poolUltima[idx % poolUltima.length], classe: "neutro" };
+  }
+
+  // erro com perguntas ainda por vir
   const poolErrado = [
     { icone: ICONE_CEREBRO_SVG, titulo: "CONEXÃO EM CONSTRUÇÃO", corpo: "Essa passou perto — a próxima pode ser a certa." },
     { icone: ICONE_LAMPADA_SVG, titulo: "QUASE LÁ", corpo: "Ainda temos desafios pela frente. Continue." },
-    { icone: ICONE_CICLO_SVG, titulo: "NOVA TENTATIVA", corpo: "Cada resposta reforça o repertório. Vamos em frente." },
+    { icone: ICONE_CICLO_SVG, titulo: "SEGUE A SINAPSE", corpo: "Cada resposta reforça o repertório. Vamos em frente." },
   ];
   return { ...poolErrado[idx % poolErrado.length], classe: "neutro" };
 }
@@ -6181,6 +6525,12 @@ function renderCadastro() {
         <input id="campoCPF" type="text" inputmode="numeric" placeholder="000.000.000-00" autocomplete="off"/>
         <div class="erro-campo" id="erroCPF"></div>
       </div>
+      <div class="campo">
+        <label for="campoWhatsapp">WhatsApp</label>
+        <input id="campoWhatsapp" type="text" inputmode="numeric" placeholder="(00) 00000-0000" autocomplete="off"/>
+        <div class="erro-campo" id="erroWhatsapp"></div>
+        <div class="dica-campo">Usamos apenas para avisar se você ganhar o sorteio.</div>
+      </div>
       <div class="campo-duplo">
         <div class="campo">
           <label for="campoLoja">Loja</label>
@@ -6203,15 +6553,17 @@ function renderCadastro() {
 
   const nome = $("#campoNome");
   const cpf = $("#campoCPF");
+  const whatsapp = $("#campoWhatsapp");
   const loja = $("#campoLoja");
   const estado = $("#campoEstado");
   const btn = $("#btnContinuar");
 
   cpf.addEventListener("input", () => (cpf.value = maskCPF(cpf.value)));
+  whatsapp.addEventListener("input", () => (whatsapp.value = maskTelefone(whatsapp.value)));
 
   // som de digitação — bem sutil, uma tecla real pressionada gera som;
   // não dispara em colar/autocompletar (só no keydown de fato)
-  [nome, cpf, loja].forEach((campo) => {
+  [nome, cpf, whatsapp, loja].forEach((campo) => {
     campo.addEventListener("keydown", (e) => {
       if ((e.key && e.key.length === 1) || e.key === "Backspace") somDigito();
     });
@@ -6221,10 +6573,27 @@ function renderCadastro() {
     let ok = true;
     $("#erroNome").textContent = "";
     $("#erroCPF").textContent = "";
+    $("#erroWhatsapp").textContent = "";
+    whatsapp.classList.remove("invalido");
     $("#avisoRepetido").innerHTML = "";
     cpf.classList.remove("invalido");
 
     if (nome.value.trim().length < 2) ok = false;
+
+    // só acusa erro depois que a pessoa digitou o suficiente, para não
+    // mostrar "inválido" enquanto ela ainda está digitando
+    const wLimpo = limparCPF(whatsapp.value);
+    // limite em 10 dígitos, não 11: um telefone fixo tem exatamente 10 e
+    // seria bloqueado sem explicação se o aviso só aparecesse com 11
+    if (wLimpo.length >= 10 && !telefoneValido(whatsapp.value)) {
+      $("#erroWhatsapp").textContent = wLimpo.length === 10
+        ? "Parece um telefone fixo. Informe um celular com WhatsApp."
+        : "Confira o número — precisa ser um celular com DDD.";
+      whatsapp.classList.add("invalido");
+      ok = false;
+    }
+    if (!telefoneValido(whatsapp.value)) ok = false;
+
     if (loja.value.trim().length < 2) ok = false;
     if (!estado.value) ok = false;
 
@@ -6249,9 +6618,10 @@ function renderCadastro() {
     return ok;
   }
 
-  [nome, cpf, loja].forEach((c) => c.addEventListener("input", validar));
+  [nome, cpf, whatsapp, loja].forEach((c) => c.addEventListener("input", validar));
   estado.addEventListener("change", () => { somSelecao(); validar(); });
   cpf.addEventListener("blur", validar);
+  whatsapp.addEventListener("blur", validar);
 
   btn.addEventListener("click", async () => {
     if (!validar()) return;
@@ -6282,7 +6652,7 @@ function renderCadastro() {
       nome: nome.value.trim(),
       loja: loja.value.trim(),
       estado: estado.value,
-      telefone: "",
+      telefone: limparCPF(whatsapp.value),   // só dígitos, pronto para o WhatsApp
       email: "",
       lgpdAceito: false,
       lgpdTimestamp: null,
@@ -6299,8 +6669,9 @@ function renderLGPD() {
     <h1 style="font-size:26px">Autorização de uso de dados</h1>
     <div class="lgpd-texto" style="margin-top:1.4rem">
       Autorizo o uso dos meus dados para participação nesta dinâmica, registro do resultado
-      no ranking e geração do meu resultado individual, com indicação de trilhas de
-      aprendizagem na Bumerangue.
+      no ranking, geração do meu resultado individual com indicação de trilhas de
+      aprendizagem na Bumerangue, e <b>contato por WhatsApp exclusivamente para
+      comunicar o resultado do sorteio</b>.
     </div>
     <label class="checkbox-linha">
       <input type="checkbox" id="checkLGPD"/>
@@ -6536,9 +6907,13 @@ function renderPergunta() {
     anelProgresso.style.strokeDashoffset = "0";
   }
 
+  iniciarTrilha(); // trilha acompanha a questão, para no feedback
+
   ESTADO.timerId = setInterval(() => {
     ESTADO.tempoRestante -= 1;
     const fracao = Math.max(0, ESTADO.tempoRestante / CONFIG.TEMPO_POR_PERGUNTA);
+    // reta final: a trilha ganha densidade junto com o anel crítico
+    if (ESTADO.tempoRestante <= CONFIG.TRILHA_SEGUNDOS_FINAIS) intensificarTrilha();
     if (anelProgresso) {
       anelProgresso.style.strokeDashoffset = (CIRCUNFERENCIA * (1 - fracao)).toFixed(2);
     }
@@ -6635,6 +7010,8 @@ function dispararPulsoLinha(letra, contexto) {
 }
 
 function registrarResposta(letraEscolhida, tempoEsgotado) {
+  pararTrilha(); // o pop-up de feedback tem os próprios sons; trilha por
+                 // baixo deles viraria ruído
   const q = ESTADO.perguntas[ESTADO.indiceAtual];
   const tempoRespostaSeg = (Date.now() - ESTADO.inicioPergunta) / 1000;
   const correta = !tempoEsgotado && letraEscolhida === q.resposta_correta;
@@ -6710,9 +7087,15 @@ function registrarResposta(letraEscolhida, tempoEsgotado) {
   else somErrado();
   pulsarFundo();
 
+  // mesma razão do pop-up: na última questão não existe "segue o jogo"
+  const ehUltimaMicro = ESTADO.indiceAtual >= ESTADO.perguntas.length - 1;
   const FRASES_CERTO = ["Conexão feita.", "Boa leitura.", "Repertório em ação."];
-  const FRASES_ERRADO = ["Outra conexão possível.", "Novo ângulo, mesma direção.", "Segue o jogo."];
-  const FRASE_TEMPO = "O tempo passou — a ideia continua.";
+  const FRASES_ERRADO = ehUltimaMicro
+    ? ["Conexão mapeada.", "Ponto registrado.", "Anotado no seu mapa."]
+    : ["Outra conexão possível.", "Novo ângulo, mesma direção.", "Segue o jogo."];
+  const FRASE_TEMPO = ehUltimaMicro
+    ? "O tempo passou — vamos ao resultado."
+    : "O tempo passou — a ideia continua.";
 
   const micro = $("#microFeedback");
   if (micro) {

@@ -113,6 +113,10 @@ body{
   position:absolute;
   top:4vh;
   right:4vw;
+  /* z-index acima do conteúdo (z=2): havia um z-index:2 duplicado no fim
+     desta mesma regra, e a última declaração vencia — o badge empatava com
+     o conteúdo e podia ser coberto. Mesmo problema que o logo tinha. */
+  z-index:5;
   font-size:11px;
   letter-spacing:.08em;
   text-transform:uppercase;
@@ -122,7 +126,6 @@ body{
   border-radius:999px;
   background:rgba(255,0,0,.08);
   font-weight:700;
-  z-index:2;
 }
 
 /* ---------- ícone sinapse ---------- */
@@ -1693,6 +1696,123 @@ p.corpo{font-size:12px; line-height:2; letter-spacing:-.02em; max-width:640px;}
 }
 @media (min-width:1400px){ .aviso-backend{font-size:12px; padding:9px 14px;} }
 
+
+/* ===================================================================
+   REVISÃO DE LAYOUT — centralização e risco de sobreposição
+   Auditoria automatizada percorreu as 10 telas medindo alinhamento e
+   entrelinha de cada texto. O que segue corrige os casos reais.
+   Não mexe em .alt-no-texto (alternativas ficam à esquerda de
+   propósito: é bloco de leitura) nem em .ranking-loja (fica alinhada
+   ao nome, numa linha horizontal).
+   =================================================================== */
+
+/* --- texto do aceite LGPD: bloco longo, centralizado como o resto --- */
+.lgpd-texto{text-align:center;}
+
+/* --- chips do portal: entrelinha 1.2 era risco quando o chip longo
+       ("RESPONDA RÁPIDO E PONTUE MAIS") quebra em duas linhas --- */
+.chip-portal{
+  text-align:center;
+  line-height:1.7;
+}
+
+/* --- textos curtos que ficaram com entrelinha 1.2 (padrão do
+       navegador). Em fonte pixelada, duas linhas nessa medida quase
+       se tocam. --- */
+.micro-feedback{line-height:1.75;}
+.qr-resultado-titulo{line-height:1.7;}
+.ranking-nome{line-height:1.6;}
+.ranking-pontos{line-height:1.5;}
+.ranking-detalhe{line-height:1.6;}
+.metrica-valor{line-height:1.4;}
+.metrica-rotulo{line-height:1.6;}
+.alt-no-letra{line-height:1;}      /* letra única dentro do círculo */
+.contador-perguntas{line-height:1.6;}
+.tag-eixo{line-height:1.6;}
+.eyebrow{line-height:1.7;}
+.badge-teste{line-height:1.6;}
+.selo-sorteio{line-height:1.8;}
+
+/* --- garantia contra sobreposição em qualquer texto que quebre linha:
+       nenhuma palavra longa vaza do container --- */
+h1, p, .portal-linha, .pergunta-texto, .alt-no, .lgpd-texto,
+.feedback-msg, .tagline-game, .premio-alerta, .selo-sorteio,
+.qr-resultado-legenda, .aviso-cpf-repetido, .erro-campo, .dica-campo{
+  overflow-wrap:break-word;
+  word-break:normal;
+  hyphens:none;
+}
+
+/* --- o modal de feedback pode ficar mais alto que a tela em telas
+       pequenas; rolagem interna evita corte do botão --- */
+.modal-feedback-card{
+  max-height:88vh;
+  overflow-y:auto;
+}
+
+
+/* ===================================================================
+   LEGIBILIDADE DA TELA DE PERGUNTA
+   Problema medido: .rede-pergunta tinha max-width 560px e, descontando
+   o núcleo (70px) e o gap (20px), sobravam 470px para as alternativas.
+   Com a fonte arcade, a alternativa mais longa da base (212 caracteres)
+   quebrava em 9 linhas — o texto ficava empilhado numa coluna estreita.
+   Numa coluna de 720px a mesma alternativa cai para 4 linhas.
+
+   Referência de tipografia: o comprimento de linha confortável para
+   leitura fica entre 45 e 75 caracteres. Na coluna estreita eram ~20.
+   =================================================================== */
+
+/* --- a rede acompanha a largura disponível em vez de travar em 560px --- */
+.rede-pergunta{
+  max-width:min(1000px, 94vw);
+  gap:28px;
+  align-items:flex-start;   /* núcleo alinhado ao topo: com alternativas
+                               longas, centralizar deixava o ícone solto
+                               no meio de um bloco alto de texto */
+  padding-top:18px;
+}
+
+/* --- alternativas: mais respiro interno e linha mais longa --- */
+.alt-no{
+  padding:16px 20px 16px 26px;
+  line-height:1.8;          /* 1.75 -> 1.8: fonte pixelada em texto de
+                               várias linhas precisa de mais respiro */
+}
+.alt-no-texto{
+  text-align:left;          /* bloco de leitura fica à esquerda: alinhado
+                               ao centro, o olho perde o início da linha */
+  max-width:none;
+}
+
+/* --- enunciado: linha mais larga reduz o número de quebras --- */
+.pergunta-texto{
+  max-width:min(920px, 94vw);
+  line-height:1.9;
+}
+
+@media (max-width:520px){
+  /* no celular não há largura para a rede lateral: o núcleo sai da
+     linha e as alternativas ocupam a tela inteira */
+  .rede-pergunta{
+    flex-direction:column;
+    align-items:center;
+    gap:14px;
+    max-width:100%;
+  }
+  .rede-nucleo{width:52px; height:52px;}
+  .alt-nos-coluna{width:100%;}
+  .alt-no{padding:14px 14px 14px 18px; line-height:1.75;}
+  .pergunta-texto{max-width:100%; line-height:1.8;}
+}
+
+@media (min-width:1400px){
+  .rede-pergunta{max-width:min(1500px, 92vw); gap:44px;}
+  .rede-nucleo{width:120px; height:120px;}
+  .alt-no{padding:24px 30px 24px 38px; line-height:1.85;}
+  .pergunta-texto{max-width:min(1360px, 92vw); line-height:1.9;}
+}
+
 /* ===================================================================
    MALHA NEURAL (camada de rede ramificada, gerada em runtime)
    Profundidade construída só com opacidade/blur/espessura — o cinza
@@ -2284,17 +2404,32 @@ body.reduz-movimento .anel-tempo-wrap.critico .anel-tempo-numero{animation:none;
 // CONFIGURAÇÃO — ajuste aqui antes do evento real
 // ---------------------------------------------------------------
 const CONFIG = {
-  // ⚠️ Com a base ainda em validação (gabarito não conferido por um
-  // especialista, nenhuma pergunta com status "Aprovada"), o modo teste
-  // libera as perguntas "Em validação" só para você conseguir rodar o
-  // fluxo ponta a ponta. Troque para false assim que o banco estiver
-  // validado — a partir daí só entram perguntas "Aprovada".
+  // =====================================================================
+  // TRÊS FLAGS INDEPENDENTES. Antes, MODO_TESTE controlava duas coisas ao
+  // mesmo tempo (marcar participação como teste E liberar perguntas não
+  // validadas), o que fazia o quiz ficar sem perguntas ao desligá-lo.
+  // =====================================================================
+
+  // Marca as participações como dados de teste no banco.
+  // true  -> ficam fora do ranking e do resultado individual (QR Code)
+  // false -> participações reais, aparecem no ranking e no QR Code
   MODO_TESTE: false,
-  // ⚠️ Flag separada da anterior — controla só a checagem de CPF duplicado.
-  // TEST_MODE_PERMITIR_CPF_REPETIDO = true  -> mesmo CPF pode participar de novo (fase de testes)
-  // TEST_MODE_PERMITIR_CPF_REPETIDO = false -> CPF já usado é bloqueado (produção)
-  // Mude só esta linha quando o evento for ao ar.
+
+  // Checagem de CPF duplicado.
+  // true  -> mesmo CPF pode participar várias vezes (fase de testes)
+  // false -> CPF já usado é bloqueado (produção)
+  // ⚠️ ESTÁ TRUE PARA OS TESTES. Trocar para false antes do evento,
+  //    senão a mesma pessoa participa quantas vezes quiser do sorteio.
   TEST_MODE_PERMITIR_CPF_REPETIDO: true,
+
+  // Quais perguntas o quiz pode sortear.
+  // true  -> aceita "Aprovada" e "Em validação"
+  // false -> aceita SOMENTE "Aprovada"
+  // ATENÇÃO: hoje as 88 perguntas do banco estão todas "Em validação".
+  // Com false, o quiz não encontra nenhuma pergunta. Só troque para false
+  // depois que os gabaritos forem revisados e as perguntas marcadas
+  // como "Aprovada" no questoes_embed.json.
+  PERMITIR_PERGUNTAS_EM_VALIDACAO: true,
   TEMPO_POR_PERGUNTA: 45, // segundos
 
   // ---- narração da IA (voz do portal) ----
@@ -2313,7 +2448,15 @@ const CONFIG = {
   TEMPO_CONTAGEM_REGRESSIVA: 5, // segundos, antes da pergunta 1
   ADMIN_PIN: "2026",
   CHAVE_ARMAZENAMENTO: "sinapse_comercial_participantes_v1",
-  EIXOS: ["Produto", "Objeção", "Regra de Negócio"],
+  // Eixos sorteados na rodada (1 pergunta de cada). Precisam existir na
+  // base: se um eixo não tiver nenhuma pergunta, o quiz não inicia.
+  // Base oficial: Regra de Negócio 38 | Produto 23 | Cultura 6 | Objeções em Vendas 4
+  // Todos os eixos que existem na base. A cada rodada, PERGUNTAS_POR_RODADA
+  // eixos são sorteados entre estes, e uma pergunta é sorteada de cada eixo
+  // escolhido. Assim cada participante recebe uma combinação diferente e as
+  // questões de Cultura entram no jogo sem alongar a experiência.
+  EIXOS: ["Produto", "Objeções em Vendas", "Regra de Negócio", "Cultura"],
+  PERGUNTAS_POR_RODADA: 3,
 
   // ---------------------------------------------------------------------
   // BACKEND (Supabase) — preencha depois de criar o projeto em supabase.com
@@ -2347,7 +2490,1215 @@ const CONFIG = {
   URL_BASE_RESULTADO: "https://anasimionato-stack.github.io/sinapse-comercial/resultado-individual.html?t=",
 };
 
-const QUESTOES = [{"id": "Q0001", "pergunta": "“Segundo o Banco Central, o consórcio é uma forma de poupança programada em grupo.”\nEssa definição reforça qual aspecto central da modalidade?", "alternativas": {"A": "Dependência de capital bancário", "B": "Ausência de taxas", "C": "Autofinanciamento coletivo"}, "resposta_correta": "C", "eixo": "Regra de Negócio", "nivel_dificuldade": "Fácil", "trilha_bumerangue": "Consultor de Sucesso", "curso_indicado": "Avaliação Consultor de Sucesso", "link_curso": null, "status": "Em validação"}, {"id": "Q0002", "pergunta": "“Segundo a Lei 11.795/2008, o consórcio é considerado um instrumento de progresso social, pois possibilita o acesso ao consumo planejado de bens e serviços.”\nCom base nessa lei, qual é a principal característica que diferencia o consórcio do financiamento?", "alternativas": {"A": "O prazo máximo de 35 anos", "B": "A exigência de entrada imediata", "C": "A ausência de juros, sendo baseado no autofinanciamento"}, "resposta_correta": "C", "eixo": "Regra de Negócio", "nivel_dificuldade": "Médio", "trilha_bumerangue": "Consultor PRO", "curso_indicado": "Avaliação Consultor PRO", "link_curso": null, "status": "Em validação"}, {"id": "Q0003", "pergunta": "“O seguro prestamista quita o saldo devedor em caso de morte ou invalidez do consorciado.”\nIsso significa:", "alternativas": {"A": "Redução obrigatória da taxa de administração", "B": "Proteção exclusiva da administradora", "C": "Segurança para cliente e grupo"}, "resposta_correta": "C", "eixo": "Objeção", "nivel_dificuldade": "Fácil", "trilha_bumerangue": "Consultor de Sucesso", "curso_indicado": "Avaliação Consultor de Sucesso", "link_curso": null, "status": "Em validação"}, {"id": "Q0004", "pergunta": "“O lance embutido é quando o consorciado utiliza parte do crédito para ofertar.”\nQual a consequência disso?", "alternativas": {"A": "Aumenta o valor da carta de crédito", "B": "Elimina a taxa de administração", "C": "Reduz o crédito disponível após a contemplação"}, "resposta_correta": "C", "eixo": "Regra de Negócio", "nivel_dificuldade": "Fácil", "trilha_bumerangue": "Consultor de Sucesso", "curso_indicado": "Avaliação Consultor de Sucesso", "link_curso": null, "status": "Em validação"}, {"id": "Q0005", "pergunta": "“O lance embutido permite utilizar parte do crédito como oferta, sem necessidade de dispor de todo o valor em mãos.”\nQual é a principal consequência dessa modalidade?", "alternativas": {"A": "O cliente paga juros sobre o valor embutido", "B": "O cliente perde parte do crédito total", "C": "O cliente antecipa a contemplação usando o próprio crédito"}, "resposta_correta": "C", "eixo": "Objeção", "nivel_dificuldade": "Médio", "trilha_bumerangue": "Consultor PRO", "curso_indicado": "Avaliação Consultor PRO", "link_curso": null, "status": "Em validação"}, {"id": "Q0006", "pergunta": "“O fundo de reserva, quando previsto, protege o grupo contra inadimplência.”\nSua principal função é:", "alternativas": {"A": "Aumentar a carta de crédito", "B": "Quitar parcelas vencidas", "C": "Equilibrar financeiramente o grupo"}, "resposta_correta": "C", "eixo": "Regra de Negócio", "nivel_dificuldade": "Fácil", "trilha_bumerangue": "Consultor de Sucesso", "curso_indicado": "Avaliação Consultor de Sucesso", "link_curso": null, "status": "Em validação"}, {"id": "Q0007", "pergunta": "“O consórcio é vantajoso mesmo em cenários de juros baixos, pois não cobra juros.”\nEsse diferencial reforça:", "alternativas": {"A": "A necessidade de entrada obrigatória", "B": "O vínculo bancário da operação", "C": "O custo mais previsível em relação ao financiamento"}, "resposta_correta": "C", "eixo": "Objeção", "nivel_dificuldade": "Fácil", "trilha_bumerangue": "Consultor de Sucesso", "curso_indicado": "Avaliação Consultor de Sucesso", "link_curso": null, "status": "Em validação"}, {"id": "Q0008", "pergunta": "“O consórcio é regulado e fiscalizado pelo Banco Central.”\nEssa regulação garante:", "alternativas": {"A": "Redução automática das parcelas", "B": "Isenção de taxa de administração", "C": "Segurança e transparência jurídica"}, "resposta_correta": "C", "eixo": "Regra de Negócio", "nivel_dificuldade": "Fácil", "trilha_bumerangue": "Consultor de Sucesso", "curso_indicado": "Avaliação Consultor de Sucesso", "link_curso": null, "status": "Em validação"}, {"id": "Q0009", "pergunta": "“O consórcio é considerado uma ferramenta de educação financeira, pois exige disciplina de poupança.”\nEsse aspecto está ligado a:", "alternativas": {"A": "Consumo imediato", "B": "Endividamento compulsório", "C": "Planejamento financeiro"}, "resposta_correta": "C", "eixo": "Produto", "nivel_dificuldade": "Fácil", "trilha_bumerangue": "Consultor de Sucesso", "curso_indicado": "Avaliação Consultor de Sucesso", "link_curso": null, "status": "Em validação"}, {"id": "Q0010", "pergunta": "“O consórcio protege o poder de compra do cliente, pois o crédito é corrigido, acompanhando a inflação.”\nEssa característica garante:", "alternativas": {"A": "Redução automática da dívida total", "B": "Aumento das parcelas sem limite", "C": "Manutenção do valor real do crédito na hora da contemplação"}, "resposta_correta": "C", "eixo": "Objeção", "nivel_dificuldade": "Médio", "trilha_bumerangue": "Consultor PRO", "curso_indicado": "Avaliação Consultor PRO", "link_curso": null, "status": "Em validação"}, {"id": "Q0011", "pergunta": "“O consórcio pode ser usado como estratégia de investimento, e não apenas para consumo.”\nQual benefício ele oferece nesse caso?", "alternativas": {"A": "Isenção fiscal", "B": "Juros reduzidos", "C": "Formação de patrimônio planejado"}, "resposta_correta": "C", "eixo": "Produto", "nivel_dificuldade": "Fácil", "trilha_bumerangue": "Consultor de Sucesso", "curso_indicado": "Avaliação Consultor de Sucesso", "link_curso": null, "status": "Em validação"}, {"id": "Q0012", "pergunta": "“O consórcio imobiliário é versátil, permitindo compra, construção, reforma e até quitação de financiamento.”\nEsse aspecto está relacionado a:", "alternativas": {"A": "Exclusividade em imóveis residenciais", "B": "Isenção de seguros obrigatórios", "C": "Flexibilidade de uso do crédito"}, "resposta_correta": "C", "eixo": "Produto", "nivel_dificuldade": "Fácil", "trilha_bumerangue": "Consultor de Sucesso", "curso_indicado": "Avaliação Consultor de Sucesso", "link_curso": null, "status": "Em validação"}, {"id": "Q0013", "pergunta": "“O consórcio de veículos atende desde motocicletas até caminhões pesados.”\nEssa abrangência demonstra:", "alternativas": {"A": "Limitação da modalidade", "B": "Obrigatoriedade de entrada", "C": "Amplitude do crédito"}, "resposta_correta": "C", "eixo": "Produto", "nivel_dificuldade": "Fácil", "trilha_bumerangue": "Consultor de Sucesso", "curso_indicado": "Avaliação Consultor de Sucesso", "link_curso": null, "status": "Em validação"}, {"id": "Q0014", "pergunta": "“O consórcio de serviços permite realizar viagens, estudos e até procedimentos médicos.”\nIsso representa:", "alternativas": {"A": "Limitação da modalidade", "B": "Exclusividade para pessoas jurídicas", "C": "Expansão para experiências intangíveis"}, "resposta_correta": "C", "eixo": "Produto", "nivel_dificuldade": "Fácil", "trilha_bumerangue": "Consultor de Sucesso", "curso_indicado": "Avaliação Consultor de Sucesso", "link_curso": null, "status": "Em validação"}, {"id": "Q0015", "pergunta": "“O consultor de consórcio deve ter postura consultiva, entendendo as necessidades do cliente.”\nEsse comportamento gera:", "alternativas": {"A": "Vendas rápidas sem análise", "B": "Redução do ticket médio", "C": "Relacionamento de confiança e fidelização"}, "resposta_correta": "C", "eixo": "Objeção", "nivel_dificuldade": "Fácil", "trilha_bumerangue": "Consultor de Sucesso", "curso_indicado": "Avaliação Consultor de Sucesso", "link_curso": null, "status": "Em validação"}, {"id": "Q0016", "pergunta": "“O consultor de consórcio deve atuar de forma consultiva, compreendendo os objetivos do cliente antes de oferecer o grupo ideal.”\nEssa abordagem promove:", "alternativas": {"A": "Vendas rápidas sem necessidade de análise", "B": "Aumento de burocracia para o cliente", "C": "Relacionamentos de confiança e fidelização"}, "resposta_correta": "C", "eixo": "Objeção", "nivel_dificuldade": "Médio", "trilha_bumerangue": "Consultor PRO", "curso_indicado": "Avaliação Consultor PRO", "link_curso": null, "status": "Em validação"}, {"id": "Q0017", "pergunta": "“O FGTS pode ser usado em consórcios imobiliários para dar lance ou amortizar saldo.”\nPorém, não pode ser usado para:", "alternativas": {"A": "Aquisição de imóvel usado", "B": "Aquisição de imóvel novo", "C": "Aquisição de terrenos"}, "resposta_correta": "C", "eixo": "Regra de Negócio", "nivel_dificuldade": "Fácil", "trilha_bumerangue": "Consultor de Sucesso", "curso_indicado": "Avaliação Consultor de Sucesso", "link_curso": null, "status": "Em validação"}, {"id": "Q0018", "pergunta": "“No consórcio, os sorteios garantem igualdade de condições entre os participantes.”\nEsse processo assegura:", "alternativas": {"A": "Redução do prazo total", "B": "Contemplação imediata", "C": "Democratização das oportunidades"}, "resposta_correta": "C", "eixo": "Regra de Negócio", "nivel_dificuldade": "Fácil", "trilha_bumerangue": "Consultor de Sucesso", "curso_indicado": "Avaliação Consultor de Sucesso", "link_curso": null, "status": "Em validação"}, {"id": "Q0019", "pergunta": "“No consórcio, o crédito é atualizado, protegendo o poder de compra do cliente.”\nEsse mecanismo garante:", "alternativas": {"A": "Eliminação da taxa de administração", "B": "Redução nominal das parcelas", "C": "Manutenção do valor real do crédito"}, "resposta_correta": "C", "eixo": "Objeção", "nivel_dificuldade": "Fácil", "trilha_bumerangue": "Consultor de Sucesso", "curso_indicado": "Avaliação Consultor de Sucesso", "link_curso": null, "status": "Em validação"}, {"id": "Q0020", "pergunta": "“No consórcio, a contemplação é o momento em que o participante recebe o crédito contratado.”\nEsse processo pode ocorrer por:", "alternativas": {"A": "Amortização automática", "B": "Financiamento ou subsídio governamental", "C": "Sorteio ou lance"}, "resposta_correta": "C", "eixo": "Regra de Negócio", "nivel_dificuldade": "Fácil", "trilha_bumerangue": "Consultor de Sucesso", "curso_indicado": "Avaliação Consultor de Sucesso", "link_curso": null, "status": "Em validação"}, {"id": "Q0021", "pergunta": "“Na modalidade de lance livre, vence quem oferecer maior percentual do crédito.”\nIsso estimula:", "alternativas": {"A": "Parcelas menores", "B": "Isenção de taxa de administração", "C": "Competição saudável entre participantes"}, "resposta_correta": "C", "eixo": "Regra de Negócio", "nivel_dificuldade": "Fácil", "trilha_bumerangue": "Consultor de Sucesso", "curso_indicado": "Avaliação Consultor de Sucesso", "link_curso": null, "status": "Em validação"}, {"id": "Q0022", "pergunta": "“Mesmo em cenários de juros baixos, o consórcio continua vantajoso, pois dispensa entrada e permite negociações à vista.”\nQual fator é o mais relevante nesse contexto?", "alternativas": {"A": "O crédito é concedido por instituições bancárias", "B": "As parcelas são subsidiadas pelo governo", "C": "O cliente pode comprar à vista, obtendo maior poder de negociação"}, "resposta_correta": "C", "eixo": "Objeção", "nivel_dificuldade": "Médio", "trilha_bumerangue": "Consultor PRO", "curso_indicado": "Avaliação Consultor PRO", "link_curso": null, "status": "Em validação"}, {"id": "Q0023", "pergunta": "“Grupos em formação são aqueles que ainda não tiveram a primeira assembleia.”\nJá os grupos em andamento são caracterizados por:", "alternativas": {"A": "Exigirem aporte extra", "B": "Serem exclusivos para imóveis", "C": "Já terem iniciado contemplações"}, "resposta_correta": "C", "eixo": "Regra de Negócio", "nivel_dificuldade": "Fácil", "trilha_bumerangue": "Consultor de Sucesso", "curso_indicado": "Avaliação Consultor de Sucesso", "link_curso": null, "status": "Em validação"}, {"id": "Q0024", "pergunta": "“Assembleias periódicas são fundamentais para a realização de sorteios e lances.”\nEsse encontro tem como objetivo:", "alternativas": {"A": "Eliminar o fundo de reserva", "B": "Reduzir parcelas", "C": "Garantir transparência e contemplações"}, "resposta_correta": "C", "eixo": "Regra de Negócio", "nivel_dificuldade": "Fácil", "trilha_bumerangue": "Consultor de Sucesso", "curso_indicado": "Avaliação Consultor de Sucesso", "link_curso": null, "status": "Em validação"}, {"id": "Q0025", "pergunta": "“A taxa de administração remunera a administradora pelos serviços prestados.”\nEssa taxa substitui:", "alternativas": {"A": "Impostos estaduais", "B": "Seguros obrigatórios", "C": "Juros de financiamento"}, "resposta_correta": "C", "eixo": "Regra de Negócio", "nivel_dificuldade": "Fácil", "trilha_bumerangue": "Consultor de Sucesso", "curso_indicado": "Avaliação Consultor de Sucesso", "link_curso": null, "status": "Em validação"}, {"id": "Q0026", "pergunta": "“A aposentadoria imobiliária é uma estratégia utilizada por clientes que formam patrimônio e, futuramente, vivem da renda de aluguéis.”\nEssa prática está mais próxima de qual conceito econômico?", "alternativas": {"A": "Alavancagem de crédito bancário", "B": "Consumo imediato", "C": "Renda passiva recorrente"}, "resposta_correta": "C", "eixo": "Objeção", "nivel_dificuldade": "Médio", "trilha_bumerangue": "Consultor PRO", "curso_indicado": "Avaliação Consultor PRO", "link_curso": null, "status": "Em validação"}, {"id": "Q0027", "pergunta": "Se tratando do tema Conhecimento de Mercado o consultor Expert deve interpretar:", "alternativas": {"A": "Exclusivamente metas da equipe.", "B": "Apenas relatórios internos.", "C": "Indicadores externos e internos de mercado."}, "resposta_correta": "C", "eixo": "Objeção", "nivel_dificuldade": "Difícil", "trilha_bumerangue": "Consultor Expert", "curso_indicado": "Avaliação Consultor Expert", "link_curso": null, "status": "Em validação"}, {"id": "Q0028", "pergunta": "Quem regula e fiscaliza as administradoras de consórcio no Brasil?", "alternativas": {"A": "COAF", "B": "Receita Federal", "C": "Banco Central (BACEN)"}, "resposta_correta": "C", "eixo": "Regra de Negócio", "nivel_dificuldade": "Médio", "trilha_bumerangue": "Consultor PRO", "curso_indicado": "Avaliação Consultor PRO", "link_curso": null, "status": "Em validação"}, {"id": "Q0029", "pergunta": "Qual é o objetivo do Seguro Prestamista oferecido pela Ademicon?", "alternativas": {"A": "Cobrir taxas de administração", "B": "Garantir valorização do crédito", "C": "Quitar dívida em caso de morte ou invalidez permanente do segurado"}, "resposta_correta": "C", "eixo": "Produto", "nivel_dificuldade": "Médio", "trilha_bumerangue": "Consultor PRO", "curso_indicado": "Avaliação Consultor PRO", "link_curso": null, "status": "Em validação"}, {"id": "Q0030", "pergunta": "Qual é a principal diferença entre grupo em formação e grupo em andamento no consórcio?", "alternativas": {"A": "Formação: só para imóveis; Andamento: só para veículos", "B": "Formação: exige entrada; Andamento: isento de entrada", "C": "Formação: antes da primeira assembleia; Andamento: cotas vagas, reposição ou transferência"}, "resposta_correta": "C", "eixo": "Regra de Negócio", "nivel_dificuldade": "Médio", "trilha_bumerangue": "Consultor PRO", "curso_indicado": "Avaliação Consultor PRO", "link_curso": null, "status": "Em validação"}, {"id": "Q0031", "pergunta": "Qual é a principal diferença entre consórcio e financiamento?", "alternativas": {"A": "No financiamento, não há necessidade de entrada", "B": "No consórcio, paga-se juros sobre o saldo", "C": "No financiamento, há juros elevados; no consórcio, não há juros"}, "resposta_correta": "C", "eixo": "Produto", "nivel_dificuldade": "Médio", "trilha_bumerangue": "Consultor PRO", "curso_indicado": "Avaliação Consultor PRO", "link_curso": null, "status": "Em validação"}, {"id": "Q0032", "pergunta": "Qual vantagem principal diferencia o consórcio de um financiamento tradicional?", "alternativas": {"A": "Maior prazo de pagamento", "B": "Entrada obrigatória", "C": "Ausência de juros"}, "resposta_correta": "C", "eixo": "Objeção", "nivel_dificuldade": "Médio", "trilha_bumerangue": "Consultor PRO", "curso_indicado": "Avaliação Consultor PRO", "link_curso": null, "status": "Em validação"}, {"id": "Q0033", "pergunta": "Qual vantagem o consórcio oferece mesmo em cenários de juros baixos no mercado?", "alternativas": {"A": "Parcelas fixas", "B": "Carência para contemplação", "C": "Não exige entrada, permite compra à vista e tem prazo menor"}, "resposta_correta": "C", "eixo": "Objeção", "nivel_dificuldade": "Médio", "trilha_bumerangue": "Consultor PRO", "curso_indicado": "Avaliação Consultor PRO", "link_curso": null, "status": "Em validação"}, {"id": "Q0034", "pergunta": "Qual produto funciona de forma semelhante ao Home Equity, mas usando veículos como garantia?", "alternativas": {"A": "Cota Equity", "B": "Seguro Prestamista", "C": "Car Equity"}, "resposta_correta": "C", "eixo": "Produto", "nivel_dificuldade": "Médio", "trilha_bumerangue": "Consultor PRO", "curso_indicado": "Avaliação Consultor PRO", "link_curso": null, "status": "Em validação"}, {"id": "Q0035", "pergunta": "Qual produto da Ademicon permite usar imóvel já existente como garantia para obter crédito?", "alternativas": {"A": "Cota Equity", "B": "Car Equity", "C": "Home Equity"}, "resposta_correta": "C", "eixo": "Produto", "nivel_dificuldade": "Médio", "trilha_bumerangue": "Consultor PRO", "curso_indicado": "Avaliação Consultor PRO", "link_curso": null, "status": "Em validação"}, {"id": "Q0036", "pergunta": "Qual plataforma online da Ademicon permite a compra e venda de cotas contempladas?", "alternativas": {"A": "CaaS Digital", "B": "Antecipay", "C": "Contemplay"}, "resposta_correta": "C", "eixo": "Objeção", "nivel_dificuldade": "Médio", "trilha_bumerangue": "Consultor PRO", "curso_indicado": "Avaliação Consultor PRO", "link_curso": null, "status": "Em validação"}, {"id": "Q0037", "pergunta": "Qual modalidade de lance permite usar parte do crédito como valor de oferta?", "alternativas": {"A": "Lance limitado", "B": "Lance fixo", "C": "Lance embutido"}, "resposta_correta": "C", "eixo": "Regra de Negócio", "nivel_dificuldade": "Médio", "trilha_bumerangue": "Consultor PRO", "curso_indicado": "Avaliação Consultor PRO", "link_curso": null, "status": "Em validação"}, {"id": "Q0038", "pergunta": "Qual lei regulamenta oficialmente o sistema de consórcios no Brasil?", "alternativas": {"A": "Lei 9.613/1998", "B": "Lei 10.406/2002", "C": "Lei 11.795/2008"}, "resposta_correta": "C", "eixo": "Regra de Negócio", "nivel_dificuldade": "Médio", "trilha_bumerangue": "Consultor PRO", "curso_indicado": "Avaliação Consultor PRO", "link_curso": null, "status": "Em validação"}, {"id": "Q0039", "pergunta": "Quais são os quatro pilares da cultura da Ademicon?", "alternativas": {"A": "Pensamento Crítico, Inovação, Ética e Proatividade", "B": "Sonhos, Coragem, Persistência e Dedicação", "C": "Pensamento Grande, Mente Aberta, Somos Empreendedores e Corrente do Bem"}, "resposta_correta": "C", "eixo": "Produto", "nivel_dificuldade": "Médio", "trilha_bumerangue": "Consultor PRO", "curso_indicado": "Avaliação Consultor PRO", "link_curso": null, "status": "Em validação"}, {"id": "Q0040", "pergunta": "Quais são os principais componentes de uma parcela de consórcio?", "alternativas": {"A": "Fundo comum + juros + IOF", "B": "Amortização + taxa Selic + seguro", "C": "Fundo comum + taxa de administração + fundo de reserva (quando previsto)"}, "resposta_correta": "C", "eixo": "Regra de Negócio", "nivel_dificuldade": "Médio", "trilha_bumerangue": "Consultor PRO", "curso_indicado": "Avaliação Consultor PRO", "link_curso": null, "status": "Em validação"}, {"id": "Q0041", "pergunta": "Para clientes de alta renda, escalonar com consórcios significa:", "alternativas": {"A": "Vender rapidamente ativos adquiridos.", "B": "Concentrar capital em uma única cota.", "C": "Criar carteira patrimonial diversificada e previsível."}, "resposta_correta": "C", "eixo": "Objeção", "nivel_dificuldade": "Difícil", "trilha_bumerangue": "Consultor Expert", "curso_indicado": "Avaliação Consultor Expert", "link_curso": null, "status": "Em validação"}, {"id": "Q0042", "pergunta": "Para alcançar clientes de alta renda, o consultor deve:", "alternativas": {"A": "Usar marketing de massa genérico.", "B": "Oferecer apenas planos básicos.", "C": "Personalizar propostas e atuar como consultor estratégico."}, "resposta_correta": "C", "eixo": "Objeção", "nivel_dificuldade": "Difícil", "trilha_bumerangue": "Consultor Expert", "curso_indicado": "Avaliação Consultor Expert", "link_curso": null, "status": "Em validação"}, {"id": "Q0043", "pergunta": "O uso de métricas permite:", "alternativas": {"A": "Reduzir relatórios gerenciais.", "B": "Aumentar burocracia.", "C": "Corrigir estratégias e maximizar performance."}, "resposta_correta": "C", "eixo": "Objeção", "nivel_dificuldade": "Difícil", "trilha_bumerangue": "Consultor Expert", "curso_indicado": "Avaliação Consultor Expert", "link_curso": null, "status": "Em validação"}, {"id": "Q0044", "pergunta": "O seguro de vida resgatável é apresentado como:", "alternativas": {"A": "Produto sem retorno financeiro.", "B": "Uma modalidade restrita a pessoas jurídicas.", "C": "Ferramenta de proteção e acumulação de patrimônio com liquidez futura."}, "resposta_correta": "C", "eixo": "Produto", "nivel_dificuldade": "Difícil", "trilha_bumerangue": "Consultor Expert", "curso_indicado": "Avaliação Consultor Expert", "link_curso": null, "status": "Em validação"}, {"id": "Q0045", "pergunta": "O risco da assunção está em:", "alternativas": {"A": "Pagamento de parcelas menores.", "B": "Perder direito à contemplação.", "C": "Herdar dívidas mal administradas pelo consorciado anterior."}, "resposta_correta": "C", "eixo": "Regra de Negócio", "nivel_dificuldade": "Difícil", "trilha_bumerangue": "Consultor Expert", "curso_indicado": "Avaliação Consultor Expert", "link_curso": null, "status": "Em validação"}, {"id": "Q0046", "pergunta": "O que significa a modalidade “aposentadoria imobiliária”?", "alternativas": {"A": "Isenção de parcelas após 60 anos", "B": "Venda de cotas antes da contemplação", "C": "Usar imóveis adquiridos para gerar renda de aluguel no futuro"}, "resposta_correta": "C", "eixo": "Objeção", "nivel_dificuldade": "Médio", "trilha_bumerangue": "Consultor PRO", "curso_indicado": "Avaliação Consultor PRO", "link_curso": null, "status": "Em validação"}, {"id": "Q0047", "pergunta": "O que significa CaaS na Ademicon?", "alternativas": {"A": "Cotação ao Serviço", "B": "Crédito como Serviço", "C": "Consórcio como Serviço"}, "resposta_correta": "C", "eixo": "Produto", "nivel_dificuldade": "Médio", "trilha_bumerangue": "Consultor PRO", "curso_indicado": "Avaliação Consultor PRO", "link_curso": null, "status": "Em validação"}, {"id": "Q0048", "pergunta": "O escalonamento com consórcio é obtido por:", "alternativas": {"A": "Quitação antecipada de dívidas.", "B": "Exclusão de investimentos paralelos.", "C": "Aquisição planejada de múltiplos bens ao longo do tempo."}, "resposta_correta": "C", "eixo": "Produto", "nivel_dificuldade": "Difícil", "trilha_bumerangue": "Consultor Expert", "curso_indicado": "Avaliação Consultor Expert", "link_curso": null, "status": "Em validação"}, {"id": "Q0049", "pergunta": "O diferencial do Seguro de Vida Resgatável frente ao tradicional é:", "alternativas": {"A": "Cobertura exclusiva em caso de morte.", "B": "Ausência de cláusulas contratuais.", "C": "Possibilidade de resgate do capital acumulado em vida."}, "resposta_correta": "C", "eixo": "Objeção", "nivel_dificuldade": "Difícil", "trilha_bumerangue": "Consultor Expert", "curso_indicado": "Avaliação Consultor Expert", "link_curso": null, "status": "Em validação"}, {"id": "Q0050", "pergunta": "O diferencial competitivo do conhecimento de mercado é:", "alternativas": {"A": "Eliminar contratos de risco.", "B": "Baixar preços.", "C": "Gerar credibilidade e confiança junto a clientes sofisticados."}, "resposta_correta": "C", "eixo": "Objeção", "nivel_dificuldade": "Difícil", "trilha_bumerangue": "Consultor Expert", "curso_indicado": "Avaliação Consultor Expert", "link_curso": null, "status": "Em validação"}, {"id": "Q0051", "pergunta": "O desafio estratégico do Consórcio + Leilão é:", "alternativas": {"A": "Eliminar a concorrência nos lances.", "B": "Participar apenas de leilões extrajudiciais.", "C": "Gerir prazos de contemplação e datas de leilão."}, "resposta_correta": "C", "eixo": "Regra de Negócio", "nivel_dificuldade": "Difícil", "trilha_bumerangue": "Consultor Expert", "curso_indicado": "Avaliação Consultor Expert", "link_curso": null, "status": "Em validação"}, {"id": "Q0052", "pergunta": "O curso destaca a análise de métricas como:", "alternativas": {"A": "Exclusiva para diretores.", "B": "Um recurso opcional.", "C": "Base para decisões assertivas em vendas."}, "resposta_correta": "C", "eixo": "Objeção", "nivel_dificuldade": "Difícil", "trilha_bumerangue": "Consultor Expert", "curso_indicado": "Avaliação Consultor Expert", "link_curso": null, "status": "Em validação"}, {"id": "Q0053", "pergunta": "O consórcio é uma modalidade genuinamente de qual país?", "alternativas": {"A": "Estados Unidos", "B": "Alemanha", "C": "Brasil"}, "resposta_correta": "C", "eixo": "Produto", "nivel_dificuldade": "Médio", "trilha_bumerangue": "Consultor PRO", "curso_indicado": "Avaliação Consultor PRO", "link_curso": null, "status": "Em validação"}, {"id": "Q0054", "pergunta": "O consórcio é descrito no curso como:", "alternativas": {"A": "Um produto financeiro de curto prazo.", "B": "Uma alternativa apenas para quem não tem acesso ao crédito bancário.", "C": "Uma ferramenta poderosa de planejamento e escalonamento patrimonial."}, "resposta_correta": "C", "eixo": "Produto", "nivel_dificuldade": "Difícil", "trilha_bumerangue": "Consultor Expert", "curso_indicado": "Avaliação Consultor Expert", "link_curso": null, "status": "Em validação"}, {"id": "Q0055", "pergunta": "O consórcio pode ser usado em leilões para:", "alternativas": {"A": "Evitar taxas judiciais.", "B": "Financiar custos administrativos.", "C": "Quitar lances vencedores com carta de crédito."}, "resposta_correta": "C", "eixo": "Regra de Negócio", "nivel_dificuldade": "Difícil", "trilha_bumerangue": "Consultor Expert", "curso_indicado": "Avaliação Consultor Expert", "link_curso": null, "status": "Em validação"}, {"id": "Q0056", "pergunta": "O consórcio de imóveis da Ademicon permite usar o crédito para:", "alternativas": {"A": "Apenas compra de imóveis prontos", "B": "Apenas compra de imóveis urbanos", "C": "Aquisição, construção, reforma, quitação de financiamento, imóveis no exterior e até leilão"}, "resposta_correta": "C", "eixo": "Produto", "nivel_dificuldade": "Médio", "trilha_bumerangue": "Consultor PRO", "curso_indicado": "Avaliação Consultor PRO", "link_curso": null, "status": "Em validação"}, {"id": "Q0057", "pergunta": "O conhecimento de mercado é essencial para:", "alternativas": {"A": "Evitar análises complexas.", "B": "Reduzir taxa de administração.", "C": "Oferecer soluções alinhadas ao cenário econômico e setorial."}, "resposta_correta": "C", "eixo": "Regra de Negócio", "nivel_dificuldade": "Difícil", "trilha_bumerangue": "Consultor Expert", "curso_indicado": "Avaliação Consultor Expert", "link_curso": null, "status": "Em validação"}, {"id": "Q0058", "pergunta": "O cliente que utiliza consórcio em leilões busca:", "alternativas": {"A": "Segurança total sem riscos.", "B": "Apenas liquidez imediata.", "C": "Aquisição de bens abaixo do preço de mercado."}, "resposta_correta": "C", "eixo": "Objeção", "nivel_dificuldade": "Difícil", "trilha_bumerangue": "Consultor Expert", "curso_indicado": "Avaliação Consultor Expert", "link_curso": null, "status": "Em validação"}, {"id": "Q0059", "pergunta": "O cliente pode usar FGTS no consórcio para:", "alternativas": {"A": "Comprar terreno", "B": "Pagar taxa de administração", "C": "Dar lance e amortizar parcelas/saldo devedor a cada dois anos"}, "resposta_correta": "C", "eixo": "Objeção", "nivel_dificuldade": "Médio", "trilha_bumerangue": "Consultor PRO", "curso_indicado": "Avaliação Consultor PRO", "link_curso": null, "status": "Em validação"}, {"id": "Q0060", "pergunta": "O cliente de alta renda busca o seguro de vida resgatável porque:", "alternativas": {"A": "Substitui automaticamente qualquer investimento em consórcio.", "B": "É isento de tributação.", "C": "Une segurança familiar a planejamento patrimonial."}, "resposta_correta": "C", "eixo": "Objeção", "nivel_dificuldade": "Difícil", "trilha_bumerangue": "Consultor Expert", "curso_indicado": "Avaliação Consultor Expert", "link_curso": null, "status": "Em validação"}, {"id": "Q0061", "pergunta": "O Consultor Expert deve conhecer profundamente:", "alternativas": {"A": "Apenas o histórico da Ademicon.", "B": "Concorrência indireta somente.", "C": "Cenário macroeconômico e setores estratégicos."}, "resposta_correta": "C", "eixo": "Objeção", "nivel_dificuldade": "Difícil", "trilha_bumerangue": "Consultor Expert", "curso_indicado": "Avaliação Consultor Expert", "link_curso": null, "status": "Em validação"}, {"id": "Q0062", "pergunta": "No curso, a integração consórcio + leilão é descrita como:", "alternativas": {"A": "Alternativa restrita a investidores profissionais.", "B": "Estratégia de risco proibida pela legislação.", "C": "Forma de potencializar aquisições em condições vantajosas."}, "resposta_correta": "C", "eixo": "Produto", "nivel_dificuldade": "Difícil", "trilha_bumerangue": "Consultor Expert", "curso_indicado": "Avaliação Consultor Expert", "link_curso": null, "status": "Em validação"}, {"id": "Q0063", "pergunta": "No consórcio, a contemplação pode ocorrer de duas formas:", "alternativas": {"A": "Financiamento e sorteio", "B": "Pagamento antecipado e lance", "C": "Sorteio e lance"}, "resposta_correta": "C", "eixo": "Regra de Negócio", "nivel_dificuldade": "Médio", "trilha_bumerangue": "Consultor PRO", "curso_indicado": "Avaliação Consultor PRO", "link_curso": null, "status": "Em validação"}, {"id": "Q0064", "pergunta": "No consórcio de imóveis Ademicon, qual taxa que é permitida pelo BACEN mas que não é cobrada?", "alternativas": {"A": "Taxa de administração", "B": "Fundo comum", "C": "Taxa de adesão"}, "resposta_correta": "C", "eixo": "Regra de Negócio", "nivel_dificuldade": "Médio", "trilha_bumerangue": "Consultor PRO", "curso_indicado": "Avaliação Consultor PRO", "link_curso": null, "status": "Em validação"}, {"id": "Q0065", "pergunta": "Métricas relevantes incluem:", "alternativas": {"A": "Valor dos brindes entregues.", "B": "Apenas número de contratos fechados.", "C": "Taxa de conversão, ticket médio e tempo de ciclo de vendas."}, "resposta_correta": "C", "eixo": "Objeção", "nivel_dificuldade": "Difícil", "trilha_bumerangue": "Consultor Expert", "curso_indicado": "Avaliação Consultor Expert", "link_curso": null, "status": "Em validação"}, {"id": "Q0066", "pergunta": "Estratégias eficazes para clientes de alta renda incluem:", "alternativas": {"A": "Ofertas automáticas sem personalização.", "B": "Divulgação em massa em redes abertas.", "C": "Networking e marketing segmentado em eventos premium."}, "resposta_correta": "C", "eixo": "Objeção", "nivel_dificuldade": "Difícil", "trilha_bumerangue": "Consultor Expert", "curso_indicado": "Avaliação Consultor Expert", "link_curso": null, "status": "Em validação"}, {"id": "Q0067", "pergunta": "Estratégia de escalonamento avançado inclui:", "alternativas": {"A": "Apenas imóveis residenciais.", "B": "Investimentos em renda fixa.", "C": "Combinação de consórcios em diferentes segmentos (imóveis, autos, agro)."}, "resposta_correta": "C", "eixo": "Produto", "nivel_dificuldade": "Difícil", "trilha_bumerangue": "Consultor Expert", "curso_indicado": "Avaliação Consultor Expert", "link_curso": null, "status": "Em validação"}, {"id": "Q0068", "pergunta": "Em estratégia de consultoria, o seguro de vida resgatável pode ser associado ao consórcio para:", "alternativas": {"A": "Reduzir prazos de contemplação.", "B": "Evitar pagamento de taxas administrativas.", "C": "Oferecer proteção e reserva financeira de longo prazo ao cliente."}, "resposta_correta": "C", "eixo": "Objeção", "nivel_dificuldade": "Difícil", "trilha_bumerangue": "Consultor Expert", "curso_indicado": "Avaliação Consultor Expert", "link_curso": null, "status": "Em validação"}, {"id": "Q0069", "pergunta": "Em estratégia avançada, a assunção pode ser usada para:", "alternativas": {"A": "Evitar inadimplência estrutural.", "B": "Criar novos grupos paralelos.", "C": "Acelerar acesso a cartas de crédito com menor tempo de espera."}, "resposta_correta": "C", "eixo": "Regra de Negócio", "nivel_dificuldade": "Difícil", "trilha_bumerangue": "Consultor Expert", "curso_indicado": "Avaliação Consultor Expert", "link_curso": null, "status": "Em validação"}, {"id": "Q0070", "pergunta": "Consultores que dominam o mercado conseguem:", "alternativas": {"A": "Eliminar riscos de inadimplência.", "B": "Vender qualquer produto sem objeções.", "C": "Antecipar tendências e orientar clientes de forma estratégica."}, "resposta_correta": "C", "eixo": "Objeção", "nivel_dificuldade": "Difícil", "trilha_bumerangue": "Consultor Expert", "curso_indicado": "Avaliação Consultor Expert", "link_curso": null, "status": "Em validação"}, {"id": "Q0071", "pergunta": "Consultores de alta performance utilizam dados para:", "alternativas": {"A": "Validar intuições pessoais.", "B": "Criar relatórios apenas para clientes.", "C": "Testar hipóteses e adaptar discursos de venda."}, "resposta_correta": "C", "eixo": "Objeção", "nivel_dificuldade": "Difícil", "trilha_bumerangue": "Consultor Expert", "curso_indicado": "Avaliação Consultor Expert", "link_curso": null, "status": "Em validação"}, {"id": "Q0072", "pergunta": "Clientes de alta renda valorizam:", "alternativas": {"A": "Simplicidade sem sofisticação.", "B": "Preço mais baixo a qualquer custo.", "C": "Exclusividade, retorno patrimonial e visão de longo prazo."}, "resposta_correta": "C", "eixo": "Objeção", "nivel_dificuldade": "Difícil", "trilha_bumerangue": "Consultor Expert", "curso_indicado": "Avaliação Consultor Expert", "link_curso": null, "status": "Em validação"}, {"id": "Q0073", "pergunta": "Alavancagem patrimonial significa:", "alternativas": {"A": "Reduzir exposição de crédito.", "B": "Endividar-se sem garantias.", "C": "Utilizar consórcio como instrumento para multiplicar ativos."}, "resposta_correta": "C", "eixo": "Produto", "nivel_dificuldade": "Difícil", "trilha_bumerangue": "Consultor Expert", "curso_indicado": "Avaliação Consultor Expert", "link_curso": null, "status": "Em validação"}, {"id": "Q0074", "pergunta": "A vantagem da alavancagem via consórcio é:", "alternativas": {"A": "Evitar juros bancários e acelerar patrimônio.", "B": "Permitir apenas crédito imediato.", "C": "Estruturar patrimônio sem descapitalizar o cliente."}, "resposta_correta": "C", "eixo": "Objeção", "nivel_dificuldade": "Difícil", "trilha_bumerangue": "Consultor Expert", "curso_indicado": "Avaliação Consultor Expert", "link_curso": null, "status": "Em validação"}, {"id": "Q0075", "pergunta": "A união consórcio + leilão amplia:", "alternativas": {"A": "Custos de operação.", "B": "Somente patrimônio imobiliário.", "C": "Opções de investimento e retorno patrimonial."}, "resposta_correta": "C", "eixo": "Produto", "nivel_dificuldade": "Difícil", "trilha_bumerangue": "Consultor Expert", "curso_indicado": "Avaliação Consultor Expert", "link_curso": null, "status": "Em validação"}, {"id": "Q0076", "pergunta": "A principal vantagem da operação de Assunção de Dívidas é:", "alternativas": {"A": "Eliminar a análise de crédito.", "B": "Reduzir as taxas do grupo.", "C": "Permitir entrada em grupos já contemplados."}, "resposta_correta": "C", "eixo": "Objeção", "nivel_dificuldade": "Difícil", "trilha_bumerangue": "Consultor Expert", "curso_indicado": "Avaliação Consultor Expert", "link_curso": null, "status": "Em validação"}, {"id": "Q0077", "pergunta": "A objeção comum de clientes de alta renda é:", "alternativas": {"A": "Taxa de administração.", "B": "Risco de inadimplência do grupo.", "C": "Falta de tempo e interesse em investimentos triviais."}, "resposta_correta": "C", "eixo": "Objeção", "nivel_dificuldade": "Difícil", "trilha_bumerangue": "Consultor Expert", "curso_indicado": "Avaliação Consultor Expert", "link_curso": null, "status": "Em validação"}, {"id": "Q0078", "pergunta": "A lógica de venda do seguro de vida resgatável se aproxima de:", "alternativas": {"A": "Previdência pública.", "B": "Produtos de consumo imediato.", "C": "Investimentos híbridos, com segurança e retorno."}, "resposta_correta": "C", "eixo": "Objeção", "nivel_dificuldade": "Difícil", "trilha_bumerangue": "Consultor Expert", "curso_indicado": "Avaliação Consultor Expert", "link_curso": null, "status": "Em validação"}, {"id": "Q0079", "pergunta": "A integração do consórcio a outras estratégias de investimento visa:", "alternativas": {"A": "Reduzir impostos de maneira direta.", "B": "Limitar riscos de mercado.", "C": "Maximizar retornos e diversificar a carteira do cliente."}, "resposta_correta": "C", "eixo": "Objeção", "nivel_dificuldade": "Difícil", "trilha_bumerangue": "Consultor Expert", "curso_indicado": "Avaliação Consultor Expert", "link_curso": null, "status": "Em validação"}, {"id": "Q0080", "pergunta": "A gestão de resultados deve ser:", "alternativas": {"A": "Focada somente em falhas.", "B": "Apenas trimestral.", "C": "Contínua, com monitoramento e ajustes em tempo real."}, "resposta_correta": "C", "eixo": "Objeção", "nivel_dificuldade": "Difícil", "trilha_bumerangue": "Consultor Expert", "curso_indicado": "Avaliação Consultor Expert", "link_curso": null, "status": "Em validação"}, {"id": "Q0081", "pergunta": "A comunicação com clientes de alta renda exige:", "alternativas": {"A": "Linguagem técnica exclusivamente jurídica.", "B": "Argumentação simplificada.", "C": "Credibilidade, sofisticação e foco em legado."}, "resposta_correta": "C", "eixo": "Objeção", "nivel_dificuldade": "Difícil", "trilha_bumerangue": "Consultor Expert", "curso_indicado": "Avaliação Consultor Expert", "link_curso": null, "status": "Em validação"}, {"id": "Q0082", "pergunta": "A assunção de dívida no consórcio ocorre quando:", "alternativas": {"A": "A administradora quita a dívida de terceiros.", "B": "O grupo absorve dívidas bancárias.", "C": "Um participante assume o contrato de outro, transferindo obrigações e direitos."}, "resposta_correta": "C", "eixo": "Regra de Negócio", "nivel_dificuldade": "Difícil", "trilha_bumerangue": "Consultor Expert", "curso_indicado": "Avaliação Consultor Expert", "link_curso": null, "status": "Em validação"}, {"id": "Q0083", "pergunta": "A aposentadoria imobiliária com consórcio significa:", "alternativas": {"A": "Redução de gastos imediatos.", "B": "Exclusivamente compra de imóveis residenciais.", "C": "Diversificação de patrimônio e alavancagem de ativos."}, "resposta_correta": "C", "eixo": "Produto", "nivel_dificuldade": "Difícil", "trilha_bumerangue": "Consultor Expert", "curso_indicado": "Avaliação Consultor Expert", "link_curso": null, "status": "Em validação"}, {"id": "Q0084", "pergunta": "A análise criteriosa de assunção deve considerar:", "alternativas": {"A": "Exclusivamente o valor da parcela.", "B": "Apenas a taxa de administração.", "C": "Histórico do contrato e saldo devedor."}, "resposta_correta": "C", "eixo": "Regra de Negócio", "nivel_dificuldade": "Difícil", "trilha_bumerangue": "Consultor Expert", "curso_indicado": "Avaliação Consultor Expert", "link_curso": null, "status": "Em validação"}, {"id": "Q0085", "pergunta": "“O consórcio é uma modalidade genuinamente brasileira, criada como resposta à dificuldade de acesso ao crédito.”\nO que isso revela sobre seu papel no sistema financeiro nacional?", "alternativas": {"A": "É uma alternativa elitizada", "B": "Foi criado como produto internacional adaptado", "C": "Democratiza o crédito para diferentes faixas de renda"}, "resposta_correta": "C", "eixo": "Produto", "nivel_dificuldade": "Médio", "trilha_bumerangue": "Consultor PRO", "curso_indicado": "Avaliação Consultor PRO", "link_curso": null, "status": "Em validação"}, {"id": "Q0086", "pergunta": "“O consórcio de serviços permite que clientes realizem viagens, festas ou procedimentos estéticos por meio de crédito parcelado.”\nEsse produto representa:", "alternativas": {"A": "Uma inovação exclusiva da Ademicon em 2020", "B": "Uma alternativa apenas para pessoas jurídicas", "C": "A ampliação do conceito de consórcio para além de bens materiais"}, "resposta_correta": "C", "eixo": "Objeção", "nivel_dificuldade": "Médio", "trilha_bumerangue": "Consultor PRO", "curso_indicado": "Avaliação Consultor PRO", "link_curso": null, "status": "Em validação"}, {"id": "Q0087", "pergunta": "“O consórcio de imóveis pode ser usado inclusive para compra de imóveis no exterior.”\nIsso representa:", "alternativas": {"A": "Necessidade de aval internacional", "B": "Exclusividade de clientes premium", "C": "Flexibilidade de uso do crédito"}, "resposta_correta": "C", "eixo": "Objeção", "nivel_dificuldade": "Fácil", "trilha_bumerangue": "Consultor de Sucesso", "curso_indicado": "Avaliação Consultor de Sucesso", "link_curso": null, "status": "Em validação"}, {"id": "Q0088", "pergunta": "“No consórcio, a contemplação pode ocorrer por sorteio ou lance, o que garante previsibilidade e democratização entre os participantes.”\nQual é a principal vantagem desse modelo?", "alternativas": {"A": "Parcelas fixas até o final do contrato", "B": "Garantia de contemplação imediata", "C": "Todos os consorciados serão contemplados dentro do prazo estabelecido"}, "resposta_correta": "C", "eixo": "Objeção", "nivel_dificuldade": "Médio", "trilha_bumerangue": "Consultor PRO", "curso_indicado": "Avaliação Consultor PRO", "link_curso": null, "status": "Em validação"}];
+const QUESTOES = [
+  {
+    "id": "1",
+    "pergunta": "Em quais situações o Seguro Prestamista da Ademicon pode quitar a dívida do cliente?",
+    "alternativas": {
+      "A": "Somente em caso de morte natural.",
+      "B": "Morte natural, morte acidental ou invalidez total permanente por acidente.",
+      "C": "Morte natural, morte acidental ou qualquer tipo de invalidez, inclusive por doença."
+    },
+    "resposta_correta": "B",
+    "eixo": "Regra de Negócio",
+    "nivel_dificuldade": "Médio",
+    "peso": 30,
+    "trilha_bumerangue": "Trilha: Consultor PRO",
+    "curso_indicado": "Trilha: Consultor PRO",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "2",
+    "pergunta": "Quais requisitos o cliente precisa atender para contratar o Seguro Prestamista?",
+    "alternativas": {
+      "A": "Ter idade mínima de 18 anos, respeitar a idade-limite na data da última assembleia e preencher a Declaração Pessoal de Saúde.",
+      "B": "Estar com a cota contemplada, não possuir restrições financeiras e indicar obrigatoriamente dois beneficiários.",
+      "C": "Ter contratado assistência funeral, participar dos sorteios mensais e possuir mais de uma cota ativa."
+    },
+    "resposta_correta": "C",
+    "eixo": "Regra de Negócio",
+    "nivel_dificuldade": "Difícil",
+    "peso": 50,
+    "trilha_bumerangue": "Trilha: Consultor PRO",
+    "curso_indicado": "Trilha: Consultor PRO",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "3",
+    "pergunta": "Um cliente contemplado contrata o seguro prestamista com cobertura sobre categoria. Qual alternativa descreve corretamente essa modalidade?",
+    "alternativas": {
+      "A": "Ela considera apenas o saldo devedor no momento do sinistro e quita somente a dívida ativa com a administradora.",
+      "B": "Ela é calculada sobre o saldo devedor multiplicado por 0,0374% e não prevê devolução de valores pagos ao beneficiário.",
+      "C": "Ela considera crédito mais taxa administrativa, quita a dívida do cliente e prevê devolução dos valores pagos ao beneficiário indicado."
+    },
+    "resposta_correta": "B",
+    "eixo": "Regra de Negócio",
+    "nivel_dificuldade": "Difícil",
+    "peso": 50,
+    "trilha_bumerangue": "Trilha: Consultor PRO",
+    "curso_indicado": "Trilha: Consultor PRO",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "7",
+    "pergunta": "Ao negociar a diluição de parcelas em atraso, em quantas vezes o valor pode ser parcelado?",
+    "alternativas": {
+      "A": "Somente em até 6 parcelas fixas.",
+      "B": "No prazo restante do grupo, ou em até 24 meses, conforme escolha do cliente no aplicativo.",
+      "C": "Obrigatoriamente em parcela única no mês seguinte."
+    },
+    "resposta_correta": "B",
+    "eixo": "Regra de Negócio",
+    "nivel_dificuldade": "Médio",
+    "peso": 30,
+    "trilha_bumerangue": "Trilha: Consultor PRO",
+    "curso_indicado": "Trilha: Consultor PRO",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "8",
+    "pergunta": "A negociação de redução de parcelas é uma estratégia comercial usada principalmente em qual segmento?",
+    "alternativas": {
+      "A": "Imóveis.",
+      "B": "Serviços.",
+      "C": "Veículos."
+    },
+    "resposta_correta": "C",
+    "eixo": "Regra de Negócio",
+    "nivel_dificuldade": "Fácil",
+    "peso": 20,
+    "trilha_bumerangue": "Trilha: Consultor PRO",
+    "curso_indicado": "Trilha: Consultor PRO",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "9",
+    "pergunta": "Em relação à negociação de troca de bem, qual afirmação está correta?",
+    "alternativas": {
+      "A": "É possível aumentar ou reduzir o crédito, mas a redução do crédito é vedada para novas vendas pela política comercial.",
+      "B": "É possível apenas aumentar o crédito contratado, nunca reduzi-lo.",
+      "C": "A troca de bem serve exclusivamente para gerar novas vendas ao cliente."
+    },
+    "resposta_correta": "A",
+    "eixo": "Regra de Negócio",
+    "nivel_dificuldade": "Médio",
+    "peso": 30,
+    "trilha_bumerangue": "Trilha: Consultor PRO",
+    "curso_indicado": "Trilha: Consultor PRO",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "10",
+    "pergunta": "De acordo com o curso de boas práticas, o que deve ser EVITADO no perfil comercial do Instagram?",
+    "alternativas": {
+      "A": "Conteúdos sobre vantagens e funcionamento do consórcio.",
+      "B": "Assuntos da vida pessoal, temas internos e ofertas de dinheiro ou comissão a terceiros.",
+      "C": "Interação com comentários e mensagens dos seguidores."
+    },
+    "resposta_correta": "B",
+    "eixo": "Regra de Negócio",
+    "nivel_dificuldade": "Fácil",
+    "peso": 20,
+    "trilha_bumerangue": "Curso - Boas Práticas de Social",
+    "curso_indicado": "Curso - Boas Práticas de Social",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "11",
+    "pergunta": "De acordo com o direcional sobre rede sociais, o que o cliente espera ver no Instagram de uma unidade Ademicon?",
+    "alternativas": {
+      "A": "Principalmente bastidores e confraternizações da equipe.",
+      "B": "Vantagens do consórcio, como ele funciona e o que é possível comprar com ele.",
+      "C": "Somente promoções e descontos na taxa de administração."
+    },
+    "resposta_correta": "B",
+    "eixo": "Regra de Negócio",
+    "nivel_dificuldade": "Fácil",
+    "peso": 20,
+    "trilha_bumerangue": "Curso - Boas Práticas de Social",
+    "curso_indicado": "Curso - Boas Práticas de Social",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "12",
+    "pergunta": "De acordo com direcional sobre redes sociais, quando conteúdos internos (treinamentos, confraternizações) devem ser publicados no perfil comercial?",
+    "alternativas": {
+      "A": "Diariamente, com a mesma frequência dos conteúdos sobre o produto.",
+      "B": "Em momentos específicos, como datas comemorativas ou ocasiões especiais.",
+      "C": "Somente quando o conteúdo sobre produto estiver em baixa de engajamento."
+    },
+    "resposta_correta": "B",
+    "eixo": "Regra de Negócio",
+    "nivel_dificuldade": "Fácil",
+    "peso": 20,
+    "trilha_bumerangue": "Curso - Boas Práticas de Social",
+    "curso_indicado": "Curso - Boas Práticas de Social",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "16",
+    "pergunta": "Qual lei regulamenta o Sistema de Consórcios no Brasil e qual órgão fiscaliza as administradoras?",
+    "alternativas": {
+      "A": "Lei nº 11.795/2008, fiscalizada pelo Banco Central do Brasil.",
+      "B": "Código de Defesa do Consumidor, fiscalizado exclusivamente pela ABAC.",
+      "C": "Lei nº 11.795/2008, fiscalizada exclusivamente pela ABAC, sem participação do Banco Central."
+    },
+    "resposta_correta": "A",
+    "eixo": "Regra de Negócio",
+    "nivel_dificuldade": "Médio",
+    "peso": 30,
+    "trilha_bumerangue": "Trilha: Consultor de Sucesso",
+    "curso_indicado": "Trilha: Consultor de Sucesso",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "17",
+    "pergunta": "De acordo com o art. 2º da Lei nº 11.795/2008, o que é um consórcio?",
+    "alternativas": {
+      "A": "Um empréstimo com juros reduzidos concedido por uma instituição financeira.",
+      "B": "A reunião de pessoas físicas e jurídicas em grupo, com prazo e número de cotas determinados, para adquirir bens ou serviços por meio de autofinanciamento.",
+      "C": "Um fundo de investimento coletivo com rendimento mínimo garantido por lei."
+    },
+    "resposta_correta": "B",
+    "eixo": "Regra de Negócio",
+    "nivel_dificuldade": "Difícil",
+    "peso": 50,
+    "trilha_bumerangue": "Trilha: Consultor de Sucesso",
+    "curso_indicado": "Trilha: Consultor de Sucesso",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "18",
+    "pergunta": "Segundo a Resolução BCB nº 285/2023, após quantos meses consecutivos de inadimplência um participante pode ser excluído do grupo de consórcio?",
+    "alternativas": {
+      "A": "3 meses.",
+      "B": "6 meses.",
+      "C": "12 meses."
+    },
+    "resposta_correta": "A",
+    "eixo": "Regra de Negócio",
+    "nivel_dificuldade": "Difícil",
+    "peso": 50,
+    "trilha_bumerangue": "Trilha: Consultor de Sucesso",
+    "curso_indicado": "Trilha: Consultor de Sucesso",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "19",
+    "pergunta": "Em que ano e sob qual nome a empresa que deu origem à Ademicon foi fundada?",
+    "alternativas": {
+      "A": "1991, como Ademilar, pioneira no consórcio de imóveis no Brasil.",
+      "B": "2008, já com o nome Ademicon, logo após a sanção da Lei do Consórcio.",
+      "C": "2021, quando a marca foi registrada pela primeira vez."
+    },
+    "resposta_correta": "A",
+    "eixo": "Cultura",
+    "nivel_dificuldade": "Fácil",
+    "peso": 20,
+    "trilha_bumerangue": "Trilha: Consultor PRO",
+    "curso_indicado": "Trilha: Consultor PRO",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "20",
+    "pergunta": "A marca Ademicon, como existe hoje, nasceu de qual movimento societário?",
+    "alternativas": {
+      "A": "Da fusão entre a Ademilar (consórcio de imóveis) e a Conseg (consórcio de veículos), consolidada em 2021.",
+      "B": "Da aquisição da Ademilar por um banco múltiplo internacional.",
+      "C": "Da abertura de capital (IPO) da Ademilar na bolsa de valores brasileira."
+    },
+    "resposta_correta": "A",
+    "eixo": "Cultura",
+    "nivel_dificuldade": "Fácil",
+    "peso": 20,
+    "trilha_bumerangue": "Trilha: Consultor PRO",
+    "curso_indicado": "Trilha: Consultor PRO",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "21",
+    "pergunta": "Atualmente, qual posição a Ademicon ocupa no mercado brasileiro de consórcios?",
+    "alternativas": {
+      "A": "É a maior administradora independente de consórcios do Brasil em créditos ativos.",
+      "B": "É a única administradora de consórcios autorizada a operar no país.",
+      "C": "É a maior administradora de consórcios do Brasil, superando bancos como Itaú e Bradesco."
+    },
+    "resposta_correta": "A",
+    "eixo": "Cultura",
+    "nivel_dificuldade": "Fácil",
+    "peso": 20,
+    "trilha_bumerangue": "Trilha: Consultor PRO",
+    "curso_indicado": "Trilha: Consultor PRO",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "22",
+    "pergunta": "Se um cliente desistir do consórcio antes da contemplação, quando receberá de volta os valores que pagou?",
+    "alternativas": {
+      "A": "Imediatamente após formalizar a desistência, descontadas as taxas previstas em contrato.",
+      "B": "Em até 30 dias após o encerramento do grupo, ou antes disso caso a cota desistente seja contemplada em sorteio.",
+      "C": "Não há devolução: os valores pagos permanecem no fundo comum para os demais participantes do grupo."
+    },
+    "resposta_correta": "B",
+    "eixo": "Regra de Negócio",
+    "nivel_dificuldade": "Médio",
+    "peso": 30,
+    "trilha_bumerangue": "Trilha: Consultor de Sucesso",
+    "curso_indicado": "Trilha: Consultor de Sucesso",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "23",
+    "pergunta": "Considere a seguinte afirmação: “Segundo a Lei 11.795/2008, o consórcio é considerado um instrumento de progresso social, pois possibilita o acesso ao consumo planejado de bens e serviços.”\nCom base nessa lei, qual característica diferencia principalmente o consórcio do financiamento?",
+    "alternativas": {
+      "A": "O prazo máximo de 35 anos.",
+      "B": "A exigência de entrada imediata.",
+      "C": "A ausência de juros, sendo baseado no autofinanciamento."
+    },
+    "resposta_correta": "C",
+    "eixo": "Regra de Negócio",
+    "nivel_dificuldade": "Médio",
+    "peso": 30,
+    "trilha_bumerangue": "Trilha: Consultor PRO",
+    "curso_indicado": "Trilha: Consultor PRO",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "24",
+    "pergunta": "Considere a seguinte afirmação: “O seguro prestamista quita o saldo devedor em caso de morte ou invalidez do consorciado.”\nNa prática, o que isso significa?",
+    "alternativas": {
+      "A": "Redução obrigatória da taxa de administração.",
+      "B": "Proteção exclusiva da administradora.",
+      "C": "Segurança para cliente e grupo."
+    },
+    "resposta_correta": "C",
+    "eixo": "Regra de Negócio",
+    "nivel_dificuldade": "Fácil",
+    "peso": 20,
+    "trilha_bumerangue": "Trilha: Consultor de Sucesso",
+    "curso_indicado": "Trilha: Consultor de Sucesso",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "25",
+    "pergunta": "Considere a seguinte afirmação: “O lance embutido é quando o consorciado utiliza parte do crédito para ofertar.”\nQual é a principal consequência dessa modalidade?",
+    "alternativas": {
+      "A": "Aumenta o valor da carta de crédito.",
+      "B": "Elimina a taxa de administração.",
+      "C": "Reduz o crédito disponível após a contemplação."
+    },
+    "resposta_correta": "C",
+    "eixo": "Regra de Negócio",
+    "nivel_dificuldade": "Médio",
+    "peso": 30,
+    "trilha_bumerangue": "Trilha: Consultor de Sucesso",
+    "curso_indicado": "Trilha: Consultor de Sucesso",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "26",
+    "pergunta": "Considere a seguinte afirmação: “O lance embutido permite utilizar parte do crédito como oferta, sem necessidade de dispor de todo o valor em mãos.”\nQual é a principal consequência dessa modalidade?",
+    "alternativas": {
+      "A": "O cliente paga juros sobre o valor embutido.",
+      "B": "O cliente perde parte do crédito total.",
+      "C": "O cliente antecipa a contemplação usando o próprio crédito."
+    },
+    "resposta_correta": "C",
+    "eixo": "Regra de Negócio",
+    "nivel_dificuldade": "Médio",
+    "peso": 30,
+    "trilha_bumerangue": "Trilha: Consultor PRO",
+    "curso_indicado": "Trilha: Consultor PRO",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "27",
+    "pergunta": "Considere a seguinte afirmação: “O fundo de reserva, quando previsto, protege o grupo contra inadimplência.”\nQual é a principal função desse recurso?",
+    "alternativas": {
+      "A": "Aumentar a carta de crédito.",
+      "B": "Quitar parcelas vencidas.",
+      "C": "Equilibrar financeiramente o grupo."
+    },
+    "resposta_correta": "C",
+    "eixo": "Regra de Negócio",
+    "nivel_dificuldade": "Médio",
+    "peso": 30,
+    "trilha_bumerangue": "Trilha: Consultor de Sucesso",
+    "curso_indicado": "Trilha: Consultor de Sucesso",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "28",
+    "pergunta": "Considere a seguinte afirmação: “O consórcio é vantajoso mesmo em cenários de juros baixos, pois não cobra juros.”\nQue benefício esse diferencial reforça?",
+    "alternativas": {
+      "A": "A necessidade de entrada obrigatória.",
+      "B": "O vínculo bancário da operação.",
+      "C": "O custo mais previsível em relação ao financiamento."
+    },
+    "resposta_correta": "C",
+    "eixo": "Produto",
+    "nivel_dificuldade": "Médio",
+    "peso": 30,
+    "trilha_bumerangue": "Trilha: Consultor de Sucesso",
+    "curso_indicado": "Trilha: Consultor de Sucesso",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "29",
+    "pergunta": "Considere a seguinte afirmação: “O consórcio é regulado e fiscalizado pelo Banco Central.”\nO que essa regulação garante aos participantes?",
+    "alternativas": {
+      "A": "Redução automática das parcelas.",
+      "B": "Isenção de taxa de administração.",
+      "C": "Segurança e transparência jurídica."
+    },
+    "resposta_correta": "C",
+    "eixo": "Regra de Negócio",
+    "nivel_dificuldade": "Médio",
+    "peso": 30,
+    "trilha_bumerangue": "Trilha: Consultor de Sucesso",
+    "curso_indicado": "Trilha: Consultor de Sucesso",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "30",
+    "pergunta": "Considere a seguinte afirmação: “O consórcio é considerado uma ferramenta de educação financeira, pois exige disciplina de poupança.”\nA qual conceito esse aspecto está ligado?",
+    "alternativas": {
+      "A": "Consumo imediato.",
+      "B": "Endividamento compulsório.",
+      "C": "Planejamento financeiro."
+    },
+    "resposta_correta": "C",
+    "eixo": "Produto",
+    "nivel_dificuldade": "Fácil",
+    "peso": 20,
+    "trilha_bumerangue": "Trilha: Consultor de Sucesso",
+    "curso_indicado": "Trilha: Consultor de Sucesso",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "31",
+    "pergunta": "Considere a seguinte afirmação: “O consórcio protege o poder de compra do cliente, pois o crédito é corrigido, acompanhando a inflação.”\nQue benefício essa característica garante?",
+    "alternativas": {
+      "A": "Redução automática da dívida total.",
+      "B": "Aumento das parcelas sem limite.",
+      "C": "Manutenção do valor real do crédito na hora da contemplação."
+    },
+    "resposta_correta": "C",
+    "eixo": "Produto",
+    "nivel_dificuldade": "Médio",
+    "peso": 30,
+    "trilha_bumerangue": "Trilha: Consultor PRO",
+    "curso_indicado": "Trilha: Consultor PRO",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "32",
+    "pergunta": "Considere a seguinte afirmação: “O consórcio pode ser usado como estratégia de investimento, e não apenas para consumo.”\nNesse caso, qual benefício o consórcio oferece?",
+    "alternativas": {
+      "A": "Isenção fiscal.",
+      "B": "Juros reduzidos.",
+      "C": "Formação de patrimônio planejado."
+    },
+    "resposta_correta": "C",
+    "eixo": "Produto",
+    "nivel_dificuldade": "Fácil",
+    "peso": 20,
+    "trilha_bumerangue": "Trilha: Consultor de Sucesso",
+    "curso_indicado": "Trilha: Consultor de Sucesso",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "33",
+    "pergunta": "Considere a seguinte afirmação: “O consórcio imobiliário é versátil, permitindo compra, construção, reforma e até quitação de financiamento.”\nA qual característica esse aspecto está relacionado?",
+    "alternativas": {
+      "A": "Exclusividade em imóveis residenciais.",
+      "B": "Isenção de seguros obrigatórios.",
+      "C": "Flexibilidade de uso do crédito."
+    },
+    "resposta_correta": "C",
+    "eixo": "Produto",
+    "nivel_dificuldade": "Fácil",
+    "peso": 20,
+    "trilha_bumerangue": "Trilha: Consultor de Sucesso",
+    "curso_indicado": "Trilha: Consultor de Sucesso",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "34",
+    "pergunta": "Considere a seguinte afirmação: “O consórcio de veículos atende desde motocicletas até caminhões pesados.”\nO que essa abrangência demonstra?",
+    "alternativas": {
+      "A": "Limitação da modalidade.",
+      "B": "Obrigatoriedade de entrada.",
+      "C": "Amplitude do crédito."
+    },
+    "resposta_correta": "C",
+    "eixo": "Produto",
+    "nivel_dificuldade": "Fácil",
+    "peso": 20,
+    "trilha_bumerangue": "Trilha: Consultor de Sucesso",
+    "curso_indicado": "Trilha: Consultor de Sucesso",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "35",
+    "pergunta": "Considere a seguinte afirmação: “O consórcio de serviços permite realizar viagens, estudos e até procedimentos médicos.”\nO que essa possibilidade representa?",
+    "alternativas": {
+      "A": "Limitação da modalidade.",
+      "B": "Exclusividade para pessoas jurídicas.",
+      "C": "Expansão para experiências intangíveis."
+    },
+    "resposta_correta": "C",
+    "eixo": "Produto",
+    "nivel_dificuldade": "Fácil",
+    "peso": 20,
+    "trilha_bumerangue": "Trilha: Consultor de Sucesso",
+    "curso_indicado": "Trilha: Consultor de Sucesso",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "36",
+    "pergunta": "Considere a seguinte afirmação: “O consultor de consórcio deve ter postura consultiva, entendendo as necessidades do cliente.”\nQue resultado esse comportamento tende a gerar?",
+    "alternativas": {
+      "A": "Vendas rápidas sem análise.",
+      "B": "Redução do ticket médio.",
+      "C": "Relacionamento de confiança e fidelização."
+    },
+    "resposta_correta": "C",
+    "eixo": "Cultura",
+    "nivel_dificuldade": "Fácil",
+    "peso": 20,
+    "trilha_bumerangue": "Trilha: Consultor PRO",
+    "curso_indicado": "Trilha: Consultor PRO",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "37",
+    "pergunta": "Considere a seguinte afirmação: “O consultor de consórcio deve atuar de forma consultiva, compreendendo os objetivos do cliente antes de oferecer o grupo ideal.”\nQue resultado essa abordagem tende a promover?",
+    "alternativas": {
+      "A": "Vendas rápidas sem necessidade de análise.",
+      "B": "Aumento de burocracia para o cliente.",
+      "C": "Relacionamentos de confiança e fidelização."
+    },
+    "resposta_correta": "C",
+    "eixo": "Cultura",
+    "nivel_dificuldade": "Fácil",
+    "peso": 20,
+    "trilha_bumerangue": "Trilha: Consultor PRO",
+    "curso_indicado": "Trilha: Consultor PRO",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "38",
+    "pergunta": "Considere a seguinte afirmação: “O FGTS pode ser usado em consórcios imobiliários para dar lance ou amortizar saldo.”\nNo entanto, para qual finalidade ele não pode ser utilizado?",
+    "alternativas": {
+      "A": "Aquisição de imóvel usado.",
+      "B": "Aquisição de imóvel novo.",
+      "C": "Aquisição de terrenos."
+    },
+    "resposta_correta": "C",
+    "eixo": "Regra de Negócio",
+    "nivel_dificuldade": "Difícil",
+    "peso": 50,
+    "trilha_bumerangue": "Trilha: Consultor de Sucesso",
+    "curso_indicado": "Trilha: Consultor de Sucesso",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "39",
+    "pergunta": "Considere a seguinte afirmação: “No consórcio, os sorteios garantem igualdade de condições entre os participantes.”\nO que esse processo assegura aos participantes?",
+    "alternativas": {
+      "A": "Redução do prazo total.",
+      "B": "Contemplação imediata.",
+      "C": "Democratização das oportunidades."
+    },
+    "resposta_correta": "C",
+    "eixo": "Regra de Negócio",
+    "nivel_dificuldade": "Fácil",
+    "peso": 20,
+    "trilha_bumerangue": "Trilha: Consultor de Sucesso",
+    "curso_indicado": "Trilha: Consultor de Sucesso",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "40",
+    "pergunta": "Considere a seguinte afirmação: “No consórcio, o crédito é atualizado, protegendo o poder de compra do cliente.”\nQue benefício esse mecanismo garante?",
+    "alternativas": {
+      "A": "Eliminação da taxa de administração.",
+      "B": "Redução nominal das parcelas.",
+      "C": "Manutenção do valor real do crédito."
+    },
+    "resposta_correta": "C",
+    "eixo": "Produto",
+    "nivel_dificuldade": "Fácil",
+    "peso": 20,
+    "trilha_bumerangue": "Trilha: Consultor de Sucesso",
+    "curso_indicado": "Trilha: Consultor de Sucesso",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "41",
+    "pergunta": "Considere a seguinte afirmação: “No consórcio, a contemplação é o momento em que o participante recebe o crédito contratado.”\nDe quais formas esse processo pode ocorrer?",
+    "alternativas": {
+      "A": "Amortização automática.",
+      "B": "Financiamento ou subsídio governamental.",
+      "C": "Sorteio ou lance."
+    },
+    "resposta_correta": "C",
+    "eixo": "Regra de Negócio",
+    "nivel_dificuldade": "Fácil",
+    "peso": 20,
+    "trilha_bumerangue": "Trilha: Consultor de Sucesso",
+    "curso_indicado": "Trilha: Consultor de Sucesso",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "42",
+    "pergunta": "Considere a seguinte afirmação: “Na modalidade de lance livre, vence quem oferecer maior percentual do crédito.”\nQue dinâmica essa modalidade estimula?",
+    "alternativas": {
+      "A": "Parcelas menores.",
+      "B": "Isenção de taxa de administração.",
+      "C": "Competição saudável entre participantes."
+    },
+    "resposta_correta": "C",
+    "eixo": "Regra de Negócio",
+    "nivel_dificuldade": "Fácil",
+    "peso": 20,
+    "trilha_bumerangue": "Trilha: Consultor de Sucesso",
+    "curso_indicado": "Trilha: Consultor de Sucesso",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "43",
+    "pergunta": "Considere a seguinte afirmação: “Mesmo em cenários de juros baixos, o consórcio continua vantajoso, pois dispensa entrada e permite negociações à vista.”\nNesse contexto, qual é o fator mais relevante?",
+    "alternativas": {
+      "A": "O crédito é concedido por instituições bancárias.",
+      "B": "As parcelas são subsidiadas pelo governo.",
+      "C": "O cliente pode comprar à vista, obtendo maior poder de negociação."
+    },
+    "resposta_correta": "C",
+    "eixo": "Produto",
+    "nivel_dificuldade": "Médio",
+    "peso": 30,
+    "trilha_bumerangue": "Trilha: Consultor PRO",
+    "curso_indicado": "Trilha: Consultor PRO",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "44",
+    "pergunta": "Considere a seguinte afirmação: “Grupos em formação são aqueles que ainda não tiveram a primeira assembleia.”\nE o que caracteriza os grupos em andamento?",
+    "alternativas": {
+      "A": "Exigirem aporte extra.",
+      "B": "Serem exclusivos para imóveis.",
+      "C": "Já terem iniciado contemplações."
+    },
+    "resposta_correta": "C",
+    "eixo": "Regra de Negócio",
+    "nivel_dificuldade": "Fácil",
+    "peso": 20,
+    "trilha_bumerangue": "Trilha: Consultor de Sucesso",
+    "curso_indicado": "Trilha: Consultor de Sucesso",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "45",
+    "pergunta": "Considere a seguinte afirmação: “Assembleias periódicas são fundamentais para a realização de sorteios e lances.”\nQual é o principal objetivo desse encontro?",
+    "alternativas": {
+      "A": "Eliminar o fundo de reserva.",
+      "B": "Reduzir parcelas.",
+      "C": "Garantir transparência e contemplações."
+    },
+    "resposta_correta": "C",
+    "eixo": "Regra de Negócio",
+    "nivel_dificuldade": "Fácil",
+    "peso": 20,
+    "trilha_bumerangue": "Trilha: Consultor de Sucesso",
+    "curso_indicado": "Trilha: Consultor de Sucesso",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "46",
+    "pergunta": "Considere a seguinte afirmação: “A taxa de administração remunera a administradora pelos serviços prestados.”\nNo modelo de consórcio, essa taxa substitui o quê?",
+    "alternativas": {
+      "A": "Impostos estaduais.",
+      "B": "Seguros obrigatórios.",
+      "C": "Juros de financiamento."
+    },
+    "resposta_correta": "C",
+    "eixo": "Regra de Negócio",
+    "nivel_dificuldade": "Médio",
+    "peso": 30,
+    "trilha_bumerangue": "Trilha: Consultor de Sucesso",
+    "curso_indicado": "Trilha: Consultor de Sucesso",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "47",
+    "pergunta": "Considere a seguinte afirmação: “A aposentadoria imobiliária é uma estratégia utilizada por clientes que formam patrimônio e, futuramente, vivem da renda de aluguéis.”\nA qual conceito econômico essa prática está mais relacionada?",
+    "alternativas": {
+      "A": "Alavancagem de crédito bancário.",
+      "B": "Consumo imediato.",
+      "C": "Renda passiva recorrente."
+    },
+    "resposta_correta": "C",
+    "eixo": "Produto",
+    "nivel_dificuldade": "Médio",
+    "peso": 30,
+    "trilha_bumerangue": "Trilha: Consultor PRO",
+    "curso_indicado": "Trilha: Consultor PRO",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "48",
+    "pergunta": "No Brasil, quem regula e fiscaliza as administradoras de consórcio no Brasil?",
+    "alternativas": {
+      "A": "COAF.",
+      "B": "Receita Federal.",
+      "C": "Banco Central do Brasil (BACEN)."
+    },
+    "resposta_correta": "C",
+    "eixo": "Regra de Negócio",
+    "nivel_dificuldade": "Fácil",
+    "peso": 20,
+    "trilha_bumerangue": "Trilha: Consultor PRO",
+    "curso_indicado": "Trilha: Consultor PRO",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "49",
+    "pergunta": "Qual é o objetivo do Seguro Prestamista oferecido pela Ademicon?",
+    "alternativas": {
+      "A": "Cobrir taxas de administração.",
+      "B": "Garantir valorização do crédito.",
+      "C": "Quitar dívida em caso de morte ou invalidez permanente do segurado."
+    },
+    "resposta_correta": "C",
+    "eixo": "Regra de Negócio",
+    "nivel_dificuldade": "Fácil",
+    "peso": 20,
+    "trilha_bumerangue": "Trilha: Consultor PRO",
+    "curso_indicado": "Trilha: Consultor PRO",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "50",
+    "pergunta": "Na prática, qual é a principal diferença entre grupo em formação e grupo em andamento no consórcio?",
+    "alternativas": {
+      "A": "Grupo em formação: exclusivo para imóveis; grupo em andamento: exclusivo para veículos.",
+      "B": "Grupo em formação: exige entrada; grupo em andamento: não exige entrada.",
+      "C": "Grupo em formação: antes da primeira assembleia; grupo em andamento: cotas vagas, de reposição ou transferência."
+    },
+    "resposta_correta": "C",
+    "eixo": "Regra de Negócio",
+    "nivel_dificuldade": "Médio",
+    "peso": 30,
+    "trilha_bumerangue": "Trilha: Consultor PRO",
+    "curso_indicado": "Trilha: Consultor PRO",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "51",
+    "pergunta": "Na prática, qual é a principal diferença entre consórcio e financiamento?",
+    "alternativas": {
+      "A": "No financiamento, não há necessidade de entrada.",
+      "B": "No consórcio, paga-se juros sobre o saldo.",
+      "C": "No financiamento, há juros elevados; no consórcio, não há juros."
+    },
+    "resposta_correta": "C",
+    "eixo": "Produto",
+    "nivel_dificuldade": "Fácil",
+    "peso": 20,
+    "trilha_bumerangue": "Trilha: Consultor PRO",
+    "curso_indicado": "Trilha: Consultor PRO",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "52",
+    "pergunta": "Qual é a principal vantagem que diferencia o consórcio de um financiamento tradicional?",
+    "alternativas": {
+      "A": "Maior prazo de pagamento.",
+      "B": "Entrada obrigatória.",
+      "C": "Ausência de juros."
+    },
+    "resposta_correta": "C",
+    "eixo": "Produto",
+    "nivel_dificuldade": "Fácil",
+    "peso": 20,
+    "trilha_bumerangue": "Trilha: Consultor PRO",
+    "curso_indicado": "Trilha: Consultor PRO",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "53",
+    "pergunta": "Qual vantagem o consórcio oferece mesmo em cenários de juros baixos no mercado?",
+    "alternativas": {
+      "A": "Parcelas fixas.",
+      "B": "Carência para contemplação.",
+      "C": "Não exige entrada, permite compra à vista e tem prazo menor."
+    },
+    "resposta_correta": "C",
+    "eixo": "Produto",
+    "nivel_dificuldade": "Médio",
+    "peso": 30,
+    "trilha_bumerangue": "Trilha: Consultor PRO",
+    "curso_indicado": "Trilha: Consultor PRO",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "54",
+    "pergunta": "Qual produto da Ademicon funciona de forma semelhante ao Home Equity, mas usando veículos como garantia?",
+    "alternativas": {
+      "A": "Cota Equity.",
+      "B": "Seguro Prestamista.",
+      "C": "Car Equity."
+    },
+    "resposta_correta": "C",
+    "eixo": "Produto",
+    "nivel_dificuldade": "Fácil",
+    "peso": 20,
+    "trilha_bumerangue": "Trilha: Consultor PRO",
+    "curso_indicado": "Trilha: Consultor PRO",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "55",
+    "pergunta": "Qual produto da Ademicon permite usar imóvel já existente como garantia para obter crédito?",
+    "alternativas": {
+      "A": "Cota Equity.",
+      "B": "Car Equity.",
+      "C": "Home Equity."
+    },
+    "resposta_correta": "C",
+    "eixo": "Produto",
+    "nivel_dificuldade": "Fácil",
+    "peso": 20,
+    "trilha_bumerangue": "Trilha: Consultor PRO",
+    "curso_indicado": "Trilha: Consultor PRO",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "56",
+    "pergunta": "Qual plataforma online da Ademicon permite a compra e venda de cotas contempladas?",
+    "alternativas": {
+      "A": "CaaS Digital.",
+      "B": "Antecipay.",
+      "C": "Contemplay."
+    },
+    "resposta_correta": "C",
+    "eixo": "Produto",
+    "nivel_dificuldade": "Fácil",
+    "peso": 20,
+    "trilha_bumerangue": "Trilha: Consultor PRO",
+    "curso_indicado": "Trilha: Consultor PRO",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "57",
+    "pergunta": "Qual modalidade de lance permite usar parte do crédito como valor de oferta?",
+    "alternativas": {
+      "A": "Lance limitado.",
+      "B": "Lance fixo.",
+      "C": "Lance embutido."
+    },
+    "resposta_correta": "C",
+    "eixo": "Regra de Negócio",
+    "nivel_dificuldade": "Fácil",
+    "peso": 20,
+    "trilha_bumerangue": "Trilha: Consultor PRO",
+    "curso_indicado": "Trilha: Consultor PRO",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "58",
+    "pergunta": "Qual lei regulamentamenta oficialmente o sistema de consórcios no Brasil?",
+    "alternativas": {
+      "A": "Lei 9.613/1998.",
+      "B": "Lei 10.406/2002.",
+      "C": "Lei 11.795/2008."
+    },
+    "resposta_correta": "C",
+    "eixo": "Regra de Negócio",
+    "nivel_dificuldade": "Médio",
+    "peso": 30,
+    "trilha_bumerangue": "Trilha: Consultor PRO",
+    "curso_indicado": "Trilha: Consultor PRO",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "59",
+    "pergunta": "Quais são os quatro pilares da cultura da Ademicon?",
+    "alternativas": {
+      "A": "Pensamento Crítico, Inovação, Ética e Proatividade.",
+      "B": "Sonhos, Coragem, Persistência e Dedicação.",
+      "C": "Pensamento Grande, Mente Aberta, Somos Empreendedores e Corrente do Bem."
+    },
+    "resposta_correta": "C",
+    "eixo": "Cultura",
+    "nivel_dificuldade": "Fácil",
+    "peso": 20,
+    "trilha_bumerangue": "Trilha: Consultor PRO",
+    "curso_indicado": "Trilha: Consultor PRO",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "60",
+    "pergunta": "Quais são os principais componentes de uma parcela de consórcio?",
+    "alternativas": {
+      "A": "Fundo comum, juros e IOF.",
+      "B": "Amortização, taxa Selic e seguro.",
+      "C": "Fundo comum, taxa de administração e fundo de reserva (quando previsto)."
+    },
+    "resposta_correta": "C",
+    "eixo": "Regra de Negócio",
+    "nivel_dificuldade": "Médio",
+    "peso": 30,
+    "trilha_bumerangue": "Trilha: Consultor PRO",
+    "curso_indicado": "Trilha: Consultor PRO",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "61",
+    "pergunta": "Na prática, o que significa a modalidade “aposentadoria imobiliária”?",
+    "alternativas": {
+      "A": "Isenção de parcelas após 60 anos.",
+      "B": "Venda de cotas antes da contemplação.",
+      "C": "Usar imóveis adquiridos para gerar renda de aluguel no futuro."
+    },
+    "resposta_correta": "C",
+    "eixo": "Produto",
+    "nivel_dificuldade": "Fácil",
+    "peso": 20,
+    "trilha_bumerangue": "Trilha: Consultor PRO",
+    "curso_indicado": "Trilha: Consultor PRO",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "62",
+    "pergunta": "Na Ademicon, o que significa a sigla CaaS na Ademicon?",
+    "alternativas": {
+      "A": "Cotação ao Serviço.",
+      "B": "Crédito como Serviço.",
+      "C": "Consórcio como Serviço."
+    },
+    "resposta_correta": "C",
+    "eixo": "Produto",
+    "nivel_dificuldade": "Fácil",
+    "peso": 20,
+    "trilha_bumerangue": "Trilha: Consultor PRO",
+    "curso_indicado": "Trilha: Consultor PRO",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "63",
+    "pergunta": "Em qual país surgiu originalmente a modalidade de consórcio?",
+    "alternativas": {
+      "A": "Estados Unidos.",
+      "B": "Alemanha.",
+      "C": "Brasil."
+    },
+    "resposta_correta": "C",
+    "eixo": "Produto",
+    "nivel_dificuldade": "Fácil",
+    "peso": 20,
+    "trilha_bumerangue": "Trilha: Consultor PRO",
+    "curso_indicado": "Trilha: Consultor PRO",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "64",
+    "pergunta": "Para quais finalidades o crédito do consórcio de imóveis da Ademicon pode ser utilizado?",
+    "alternativas": {
+      "A": "Exclusivamente para a compra de imóveis prontos.",
+      "B": "Exclusivamente para a compra de imóveis urbanos.",
+      "C": "Aquisição, construção, reforma, quitação de financiamento, imóveis no exterior e até leilão."
+    },
+    "resposta_correta": "C",
+    "eixo": "Produto",
+    "nivel_dificuldade": "Médio",
+    "peso": 30,
+    "trilha_bumerangue": "Trilha: Consultor PRO",
+    "curso_indicado": "Trilha: Consultor PRO",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "65",
+    "pergunta": "Para quais finalidades o cliente pode usar o FGTS no consórcio?",
+    "alternativas": {
+      "A": "Comprar terreno.",
+      "B": "Pagar taxa de administração.",
+      "C": "Dar lance e amortizar parcelas/saldo devedor a cada dois anos."
+    },
+    "resposta_correta": "C",
+    "eixo": "Regra de Negócio",
+    "nivel_dificuldade": "Difícil",
+    "peso": 50,
+    "trilha_bumerangue": "Trilha: Consultor PRO",
+    "curso_indicado": "Trilha: Consultor PRO",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "66",
+    "pergunta": "No consórcio, de quais duas formas pode ocorrer a contemplação?",
+    "alternativas": {
+      "A": "Financiamento e sorteio.",
+      "B": "Pagamento antecipado e lance.",
+      "C": "Sorteio e lance."
+    },
+    "resposta_correta": "C",
+    "eixo": "Regra de Negócio",
+    "nivel_dificuldade": "Fácil",
+    "peso": 20,
+    "trilha_bumerangue": "Trilha: Consultor PRO",
+    "curso_indicado": "Trilha: Consultor PRO",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "67",
+    "pergunta": "No consórcio de imóveis da Ademicon, qual taxa é permitida pelo BACEN, mas não é cobrada?",
+    "alternativas": {
+      "A": "Taxa de administração.",
+      "B": "Fundo comum.",
+      "C": "Taxa de adesão."
+    },
+    "resposta_correta": "C",
+    "eixo": "Regra de Negócio",
+    "nivel_dificuldade": "Médio",
+    "peso": 30,
+    "trilha_bumerangue": "Trilha: Consultor PRO",
+    "curso_indicado": "Trilha: Consultor PRO",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "68",
+    "pergunta": "Considere a seguinte afirmação: “O consórcio é uma modalidade genuinamente brasileira, criada como resposta à dificuldade de acesso ao crédito.”\nO que isso revela sobre o papel do consórcio no sistema financeiro nacional?",
+    "alternativas": {
+      "A": "É uma alternativa elitizada.",
+      "B": "Foi criado como produto internacional adaptado.",
+      "C": "Democratiza o crédito para diferentes faixas de renda."
+    },
+    "resposta_correta": "C",
+    "eixo": "Produto",
+    "nivel_dificuldade": "Médio",
+    "peso": 30,
+    "trilha_bumerangue": "Trilha: Consultor PRO",
+    "curso_indicado": "Trilha: Consultor PRO",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "69",
+    "pergunta": "Considere a seguinte afirmação: “O consórcio de serviços permite que clientes realizem viagens, festas ou procedimentos estéticos por meio de crédito parcelado.”\nO que esse produto representa?",
+    "alternativas": {
+      "A": "Uma inovação exclusiva da Ademicon em 2020.",
+      "B": "Uma alternativa apenas para pessoas jurídicas.",
+      "C": "A ampliação do conceito de consórcio para além de bens materiais."
+    },
+    "resposta_correta": "C",
+    "eixo": "Produto",
+    "nivel_dificuldade": "Fácil",
+    "peso": 20,
+    "trilha_bumerangue": "Trilha: Consultor PRO",
+    "curso_indicado": "Trilha: Consultor PRO",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "70",
+    "pergunta": "Considere a seguinte afirmação: “O consórcio de imóveis pode ser usado inclusive para compra de imóveis no exterior.”\nO que essa possibilidade representa?",
+    "alternativas": {
+      "A": "Necessidade de aval internacional.",
+      "B": "Exclusividade de clientes premium.",
+      "C": "Flexibilidade de uso do crédito."
+    },
+    "resposta_correta": "C",
+    "eixo": "Produto",
+    "nivel_dificuldade": "Médio",
+    "peso": 30,
+    "trilha_bumerangue": "Trilha: Consultor de Sucesso",
+    "curso_indicado": "Trilha: Consultor de Sucesso",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "71",
+    "pergunta": "Considere a seguinte afirmação: “No consórcio, a contemplação pode ocorrer por sorteio ou lance, o que garante previsibilidade e democratização entre os participantes.”\nNa prática, qual é a principal vantagem desse modelo?",
+    "alternativas": {
+      "A": "Parcelas fixas até o final do contrato.",
+      "B": "Garantia de contemplação imediata.",
+      "C": "Todos os consorciados serão contemplados dentro do prazo estabelecido."
+    },
+    "resposta_correta": "C",
+    "eixo": "Regra de Negócio",
+    "nivel_dificuldade": "Médio",
+    "peso": 30,
+    "trilha_bumerangue": "Trilha: Consultor PRO",
+    "curso_indicado": "Trilha: Consultor PRO",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "72",
+    "pergunta": "Durante um atendimento, um cliente diz: “Tenho urgência e preciso ter certeza de que serei contemplado no próximo mês.” Qual é a resposta consultiva correta?",
+    "alternativas": {
+      "A": "Garantir que o pagamento da primeira parcela assegura a contemplação no mês seguinte.",
+      "B": "Explicar que não há garantia de data: a contemplação ocorre por sorteio ou lance, conforme as regras do contrato e os recursos do grupo; se a urgência for inegociável, é preciso avaliar se o consórcio é adequado.",
+      "C": "Prometer a contemplação desde que o cliente utilize lance embutido."
+    },
+    "resposta_correta": "B",
+    "eixo": "Objeções em Vendas",
+    "nivel_dificuldade": "Difícil",
+    "peso": 50,
+    "trilha_bumerangue": "Trilha: Consultor de Sucesso",
+    "curso_indicado": "Trilha: Consultor de Sucesso",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "73",
+    "pergunta": "Durante um atendimento, um cliente afirma: “A taxa de administração é apenas juros com outro nome.” Como o consultor deve responder?",
+    "alternativas": {
+      "A": "Concordar e dizer que a taxa de administração funciona como juros reduzidos.",
+      "B": "Afirmar que o consórcio não possui nenhum custo além do fundo comum.",
+      "C": "Explicar que o consórcio não cobra juros de financiamento, mas possui taxa de administração e outras cobranças previstas no contrato, que devem ser apresentadas com transparência na comparação do custo total."
+    },
+    "resposta_correta": "C",
+    "eixo": "Objeções em Vendas",
+    "nivel_dificuldade": "Difícil",
+    "peso": 50,
+    "trilha_bumerangue": "Trilha: Consultor de Sucesso",
+    "curso_indicado": "Trilha: Consultor de Sucesso",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "74",
+    "pergunta": "Durante um atendimento, um cliente questiona: “Se não há juros, por que o valor da parcela pode mudar?” Qual é a explicação correta?",
+    "alternativas": {
+      "A": "O crédito e as contribuições podem ser reajustados pelos critérios previstos no contrato, acompanhando o preço do bem ou o índice definido, para preservar o poder de compra do crédito.",
+      "B": "A administradora pode aumentar a parcela livremente, sem critério contratual.",
+      "C": "A parcela só muda quando o cliente atrasa o pagamento."
+    },
+    "resposta_correta": "A",
+    "eixo": "Objeções em Vendas",
+    "nivel_dificuldade": "Difícil",
+    "peso": 50,
+    "trilha_bumerangue": "Trilha: Consultor de Sucesso",
+    "curso_indicado": "Trilha: Consultor de Sucesso",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "75",
+    "pergunta": "Durante um atendimento, um cliente diz: “Não tenho dinheiro disponível para ofertar um lance.” Qual orientação sobre o lance embutido está correta?",
+    "alternativas": {
+      "A": "O lance embutido é um valor extra concedido pela administradora e não altera o crédito disponível.",
+      "B": "Quando admitido pelas regras do grupo, o cliente pode usar parte do próprio crédito como lance; se vencer, esse valor é deduzido da carta e reduz o crédito líquido disponível.",
+      "C": "O lance embutido garante a contemplação na assembleia em que for ofertado."
+    },
+    "resposta_correta": "B",
+    "eixo": "Objeções em Vendas",
+    "nivel_dificuldade": "Difícil",
+    "peso": 50,
+    "trilha_bumerangue": "Trilha: Consultor de Sucesso",
+    "curso_indicado": "Trilha: Consultor de Sucesso",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "76",
+    "pergunta": "Qual é a sequência correta das etapas do curso “Tchan das Vendas”?",
+    "alternativas": {
+      "A": "Mão no narizinho → Mão no cabelinho → Mão na orelhinha → Mão na barriguinha → Agora PARE",
+      "B": "Mão no cabelinho → Mão no narizinho → Mão na orelhinha → Mão na barriguinha → Agora PARE",
+      "C": "Mão no cabelinho → Mão na orelhinha → Mão no narizinho → Mão na barriguinha → Agora PARE"
+    },
+    "resposta_correta": "B",
+    "eixo": "Regra de Negócio",
+    "nivel_dificuldade": "Médio",
+    "peso": 30,
+    "trilha_bumerangue": "Curso - Tchan das Vendas",
+    "curso_indicado": "Curso - Tchan das Vendas",
+    "link_curso": null,
+    "status": "Aprovada"
+  },
+  {
+    "id": "77",
+    "pergunta": "Quais são os 4 gatilhos mentais explorados no curso “Tchan das Vendas”?",
+    "alternativas": {
+      "A": "Prova social, autoridade, reciprocidade e escassez",
+      "B": "Urgência, empatia, autoridade e confiança",
+      "C": "Reciprocidade, confiança, necessidade e oportunidade"
+    },
+    "resposta_correta": "A",
+    "eixo": "Regra de Negócio",
+    "nivel_dificuldade": "Fácil",
+    "peso": 20,
+    "trilha_bumerangue": "Curso - Tchan das Vendas",
+    "curso_indicado": "Curso - Tchan das Vendas",
+    "link_curso": null,
+    "status": "Aprovada"
+  }
+];
 
 // ---------------------------------------------------------------
 // ícone (inline, para poder animar via CSS/JS e evitar ids duplicados)
@@ -3307,8 +4658,15 @@ function cpfJaParticipou(cpfLimpo) {
 // seleção de perguntas
 // ---------------------------------------------------------------
 function perguntasAptas() {
+  // MODO_TESTE controlava DUAS coisas ao mesmo tempo: marcar participações
+  // como teste E liberar perguntas não validadas. Isso acoplava decisões
+  // independentes — desligar o modo teste para o QR Code funcionar deixava
+  // o quiz sem nenhuma pergunta, porque as 88 do banco estão "Em validação".
+  // Agora a liberação de perguntas tem a sua própria configuração.
   return QUESTOES.filter((q) => {
-    if (CONFIG.MODO_TESTE) return q.status === "Aprovada" || q.status === "Em validação";
+    if (CONFIG.PERMITIR_PERGUNTAS_EM_VALIDACAO) {
+      return q.status === "Aprovada" || q.status === "Em validação";
+    }
     return q.status === "Aprovada";
   });
 }
@@ -3324,10 +4682,25 @@ function embaralhar(array) {
 
 function selecionarPerguntasDaRodada() {
   const aptas = perguntasAptas();
+
+  // considera apenas eixos que realmente têm pergunta na base: se um eixo
+  // for configurado mas ficar vazio, ele é ignorado em vez de travar a
+  // rodada inteira (antes, um eixo sem pergunta fazia o quiz não iniciar)
+  const eixosComPergunta = CONFIG.EIXOS.filter((eixo) =>
+    aptas.some((q) => q.eixo === eixo)
+  );
+
+  const quantos = Math.min(CONFIG.PERGUNTAS_POR_RODADA, eixosComPergunta.length);
+  if (quantos === 0) return null;
+
+  // sorteia QUAIS eixos entram nesta rodada, depois uma pergunta de cada.
+  // Com 4 eixos e 3 perguntas, cada participante recebe uma combinação
+  // diferente — e as questões de Cultura passam a circular.
+  const eixosDaRodada = embaralhar(eixosComPergunta).slice(0, quantos);
+
   const selecionadas = [];
-  for (const eixo of CONFIG.EIXOS) {
+  for (const eixo of eixosDaRodada) {
     const doEixo = aptas.filter((q) => q.eixo === eixo);
-    if (doEixo.length === 0) return null; // banco insuficiente nesse eixo
     selecionadas.push(embaralhar(doEixo)[0]);
   }
   return embaralhar(selecionadas);
@@ -3852,52 +5225,117 @@ const MINI_SINAPSE_SVG = `<svg viewBox="0 0 40 40" width="100%" height="100%">
 // (traço fino, paleta da marca), no lugar de emojis genéricos que variam
 // de aparência entre sistemas operacionais e destoam da identidade.
 // ---------------------------------------------------------------
-const ICONE_PREMIO_SVG = `<svg viewBox="0 0 40 40" width="100%" height="100%">
-  <circle cx="20" cy="20" r="4" fill="#FF0000"/>
-  <line x1="20" y1="20" x2="20" y2="6" stroke="#FF0000" stroke-width="2" stroke-linecap="round"/>
-  <line x1="20" y1="20" x2="20" y2="34" stroke="#FF0000" stroke-width="2" stroke-linecap="round"/>
-  <line x1="20" y1="20" x2="6" y2="20" stroke="#FF0000" stroke-width="2" stroke-linecap="round"/>
-  <line x1="20" y1="20" x2="34" y2="20" stroke="#FF0000" stroke-width="2" stroke-linecap="round"/>
-  <line x1="20" y1="20" x2="10" y2="10" stroke="#FF0000" stroke-width="1.5" stroke-linecap="round" opacity=".7"/>
-  <line x1="20" y1="20" x2="30" y2="10" stroke="#FF0000" stroke-width="1.5" stroke-linecap="round" opacity=".7"/>
-  <line x1="20" y1="20" x2="10" y2="30" stroke="#FF0000" stroke-width="1.5" stroke-linecap="round" opacity=".7"/>
-  <line x1="20" y1="20" x2="30" y2="30" stroke="#FF0000" stroke-width="1.5" stroke-linecap="round" opacity=".7"/>
+// ============================================================================
+// ÍCONES — linguagem única de nós e conexões
+// ============================================================================
+// Revisão de coerência visual. O conjunto anterior misturava sete metáforas
+// distintas (raio, cérebro, lâmpada, relógio, bateria, ciclo, estrela),
+// nenhuma delas ligada ao conceito do projeto. O "cérebro" em especial
+// renderizava como um ovo com um risco, sem leitura possível.
+//
+// Todos os ícones agora expressam ESTADOS DE UMA REDE:
+//   acerto            -> nós conectados e acesos
+//   acerto parcial    -> conexão incompleta, um nó apagado
+//   erro              -> nós presentes, conexões interrompidas
+//   tempo esgotado    -> nó em espera, pulso que não completou
+//   nova tentativa    -> ciclo que retorna ao nó
+//   sorteio           -> nó irradiando energia
+//
+// Padrão técnico unificado (antes cada ícone tinha o seu):
+//   viewBox 0 0 40 40 | stroke-width 2 | linecap e linejoin round
+//   estrutura em --cinza-claro | energia em --vermelho | nó aceso em branco
+// ============================================================================
+
+const SVG_ABRE = `<svg viewBox="0 0 40 40" width="100%" height="100%" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">`;
+
+// ACERTO TOTAL — três nós conectados, todos acesos, com pulso irradiando
+const ICONE_RAIO_SVG = SVG_ABRE + `
+  <line x1="11" y1="27" x2="20" y2="13" stroke="#FF0000"/>
+  <line x1="20" y1="13" x2="29" y2="27" stroke="#FF0000"/>
+  <line x1="11" y1="27" x2="29" y2="27" stroke="#FF0000"/>
+  <circle cx="20" cy="13" r="4" fill="#FFFFFF" stroke="#FFFFFF"/>
+  <circle cx="11" cy="27" r="3.4" fill="#FFFFFF" stroke="#FFFFFF"/>
+  <circle cx="29" cy="27" r="3.4" fill="#FFFFFF" stroke="#FFFFFF"/>
+  <line x1="20" y1="7" x2="20" y2="4" stroke="#FF0000" stroke-width="1.6"/>
+  <line x1="6" y1="31" x2="4" y2="33" stroke="#FF0000" stroke-width="1.6"/>
+  <line x1="34" y1="31" x2="36" y2="33" stroke="#FF0000" stroke-width="1.6"/>
 </svg>`;
-const ICONE_RAIO_SVG = `<svg viewBox="0 0 40 40" width="100%" height="100%">
-  <path d="M21 5 L11 22 L19 22 L17 35 L30 16 L21 16 Z" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linejoin="round"/>
+
+// CONEXÃO FEITA — dois nós ligados, o pulso percorrendo a conexão
+const ICONE_CONEXAO_SVG = SVG_ABRE + `
+  <line x1="14" y1="15" x2="26" y2="25" stroke="#FF0000"/>
+  <circle fill="none" cx="12" cy="14" r="4.5" stroke="#FFFFFF"/>
+  <circle cx="12" cy="14" r="1.8" fill="#FFFFFF" stroke="#FFFFFF"/>
+  <circle fill="none" cx="28" cy="26" r="4.5" stroke="#FFFFFF"/>
+  <circle cx="28" cy="26" r="1.8" fill="#FFFFFF" stroke="#FFFFFF"/>
+  <circle cx="20" cy="20" r="2.2" fill="#FF0000" stroke="#FF0000"/>
 </svg>`;
-const ICONE_CONEXAO_SVG = `<svg viewBox="0 0 40 40" width="100%" height="100%">
-  <circle cx="12" cy="14" r="4.5" fill="none" stroke="#FFFFFF" stroke-width="2"/>
-  <circle cx="28" cy="26" r="4.5" fill="none" stroke="#FFFFFF" stroke-width="2"/>
-  <line x1="15.5" y1="17.5" x2="24.5" y2="22.5" stroke="#FFFFFF" stroke-width="2"/>
-  <circle cx="12" cy="14" r="1.6" fill="#FFFFFF"/>
-  <circle cx="28" cy="26" r="1.6" fill="#FFFFFF"/>
+
+// CONEXÃO EM CONSTRUÇÃO — substitui o "cérebro". Rede com uma ligação
+// ainda incompleta: dois nós acesos e ligados, o terceiro por conectar
+const ICONE_CEREBRO_SVG = SVG_ABRE + `
+  <line x1="12" y1="14" x2="26" y2="14" stroke="#DCDDDE"/>
+  <line x1="26" y1="17" x2="20" y2="27" stroke="#FF0000" stroke-dasharray="3 3"/>
+  <circle cx="10" cy="14" r="3.6" fill="#FFFFFF" stroke="#FFFFFF"/>
+  <circle cx="28" cy="14" r="3.6" fill="#FFFFFF" stroke="#FFFFFF"/>
+  <circle fill="none" cx="19" cy="29" r="3.6" stroke="#FF0000"/>
 </svg>`;
-const ICONE_CEREBRO_SVG = `<svg viewBox="0 0 40 40" width="100%" height="100%">
-  <path d="M10 24 C10 14 16 8 20 8 C24 8 30 14 30 24 C30 30 25 33 20 33 C15 33 10 30 10 24 Z" fill="none" stroke="#DCDDDE" stroke-width="1.6"/>
-  <path d="M15 15 C17 18 15 20 18 22 C21 24 19 27 22 28" fill="none" stroke="#FF0000" stroke-width="1.6" stroke-linecap="round"/>
+
+// QUASE LÁ — substitui a "lâmpada". Rede com metade das conexões ativas
+const ICONE_LAMPADA_SVG = SVG_ABRE + `
+  <line x1="13" y1="12" x2="27" y2="12" stroke="#DCDDDE"/>
+  <line x1="13" y1="28" x2="27" y2="28" stroke="#DCDDDE" stroke-dasharray="3 3"/>
+  <line x1="11" y1="15" x2="11" y2="25" stroke="#DCDDDE"/>
+  <line x1="29" y1="15" x2="29" y2="25" stroke="#FF0000" stroke-dasharray="3 3"/>
+  <circle cx="11" cy="12" r="3.4" fill="#FFFFFF" stroke="#FFFFFF"/>
+  <circle cx="29" cy="12" r="3.4" fill="#FFFFFF" stroke="#FFFFFF"/>
+  <circle fill="none" cx="11" cy="28" r="3.4" stroke="#DCDDDE"/>
+  <circle fill="none" cx="29" cy="28" r="3.4" stroke="#FF0000"/>
 </svg>`;
-const ICONE_LAMPADA_SVG = `<svg viewBox="0 0 40 40" width="100%" height="100%">
-  <circle cx="20" cy="15" r="9" fill="none" stroke="#DCDDDE" stroke-width="2"/>
-  <line x1="16" y1="27" x2="24" y2="27" stroke="#DCDDDE" stroke-width="2" stroke-linecap="round"/>
-  <line x1="17" y1="31" x2="23" y2="31" stroke="#DCDDDE" stroke-width="2" stroke-linecap="round"/>
-  <line x1="20" y1="6" x2="20" y2="3" stroke="#FF0000" stroke-width="1.6" stroke-linecap="round"/>
+
+// NOVA TENTATIVA — o ciclo volta ao nó de origem
+const ICONE_CICLO_SVG = SVG_ABRE + `
+  <path fill="none" d="M28 13 A11 11 0 1 1 11 22" stroke="#DCDDDE"/>
+  <path fill="none" d="M22 10 L28 13 L26 19" stroke="#FF0000"/>
+  <circle cx="11" cy="22" r="3.6" fill="#FFFFFF" stroke="#FFFFFF"/>
 </svg>`;
-const ICONE_CICLO_SVG = `<svg viewBox="0 0 40 40" width="100%" height="100%">
-  <path d="M10 20 A10 10 0 1 1 13 27" fill="none" stroke="#DCDDDE" stroke-width="2" stroke-linecap="round"/>
-  <path d="M8 22 L10 27 L15 25" fill="none" stroke="#DCDDDE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+
+// TEMPO ESGOTADO — o nó ficou em espera e o pulso não completou o trajeto
+const ICONE_RELOGIO_SVG = SVG_ABRE + `
+  <circle fill="none" cx="20" cy="21" r="12" stroke="#DCDDDE" stroke-dasharray="4 3"/>
+  <line x1="20" y1="21" x2="20" y2="14" stroke="#DCDDDE"/>
+  <line x1="20" y1="21" x2="25" y2="24" stroke="#FF0000"/>
+  <circle cx="20" cy="21" r="2.4" fill="#FFFFFF" stroke="#FFFFFF"/>
+  <circle fill="none" cx="20" cy="9" r="2.6" stroke="#FF0000"/>
 </svg>`;
-const ICONE_RELOGIO_SVG = `<svg viewBox="0 0 40 40" width="100%" height="100%">
-  <circle cx="20" cy="21" r="12" fill="none" stroke="#DCDDDE" stroke-width="2"/>
-  <line x1="20" y1="21" x2="20" y2="13" stroke="#DCDDDE" stroke-width="2" stroke-linecap="round"/>
-  <line x1="20" y1="21" x2="25" y2="24" stroke="#DCDDDE" stroke-width="2" stroke-linecap="round"/>
-  <line x1="15" y1="6" x2="20" y2="9" stroke="#DCDDDE" stroke-width="1.6" stroke-linecap="round"/>
-  <line x1="25" y1="6" x2="20" y2="9" stroke="#DCDDDE" stroke-width="1.6" stroke-linecap="round"/>
+
+// REDE SEM ENERGIA — substitui a "bateria". Nós presentes, conexões
+// interrompidas: é o estado de quem precisa refazer a trilha
+const ICONE_BATERIA_SVG = SVG_ABRE + `
+  <line x1="13" y1="13" x2="27" y2="13" stroke="#DCDDDE" stroke-dasharray="3 3"/>
+  <line x1="13" y1="27" x2="27" y2="27" stroke="#DCDDDE" stroke-dasharray="3 3"/>
+  <line x1="11" y1="16" x2="11" y2="24" stroke="#DCDDDE" stroke-dasharray="3 3"/>
+  <line x1="29" y1="16" x2="29" y2="24" stroke="#DCDDDE" stroke-dasharray="3 3"/>
+  <circle fill="none" cx="11" cy="13" r="3.2" stroke="#DCDDDE"/>
+  <circle fill="none" cx="29" cy="13" r="3.2" stroke="#DCDDDE"/>
+  <circle fill="none" cx="11" cy="27" r="3.2" stroke="#DCDDDE"/>
+  <circle fill="none" cx="29" cy="27" r="3.2" stroke="#DCDDDE"/>
+  <circle fill="none" cx="20" cy="20" r="4" stroke="#FF0000"/>
+  <line x1="20" y1="17.6" x2="20" y2="22.4" stroke="#FF0000" stroke-width="1.6"/>
 </svg>`;
-const ICONE_BATERIA_SVG = `<svg viewBox="0 0 40 40" width="100%" height="100%">
-  <rect x="6" y="13" width="24" height="14" rx="2" fill="none" stroke="#DCDDDE" stroke-width="2"/>
-  <rect x="31" y="17" width="4" height="6" rx="1" fill="#DCDDDE"/>
-  <line x1="12" y1="17" x2="12" y2="23" stroke="#FF0000" stroke-width="2" stroke-linecap="round"/>
+
+// SORTEIO — nó central irradiando energia pela rede
+const ICONE_PREMIO_SVG = SVG_ABRE + `
+  <line x1="20" y1="14" x2="20" y2="7" stroke="#FF0000"/>
+  <line x1="20" y1="26" x2="20" y2="33" stroke="#FF0000"/>
+  <line x1="14" y1="20" x2="7" y2="20" stroke="#FF0000"/>
+  <line x1="26" y1="20" x2="33" y2="20" stroke="#FF0000"/>
+  <line x1="15.8" y1="15.8" x2="11" y2="11" stroke="#FF0000" stroke-width="1.5" opacity=".75"/>
+  <line x1="24.2" y1="15.8" x2="29" y2="11" stroke="#FF0000" stroke-width="1.5" opacity=".75"/>
+  <line x1="15.8" y1="24.2" x2="11" y2="29" stroke="#FF0000" stroke-width="1.5" opacity=".75"/>
+  <line x1="24.2" y1="24.2" x2="29" y2="29" stroke="#FF0000" stroke-width="1.5" opacity=".75"/>
+  <circle cx="20" cy="20" r="4.5" fill="#FF0000" stroke="#FF0000"/>
+  <circle cx="20" cy="20" r="1.8" fill="#FFFFFF" stroke="#FFFFFF"/>
 </svg>`;
 
 function explodirSinapse({ x, y, quantidade = 8, raio = 160, duracaoBase = 0.7, comConexoes = false, origemEl = null, flashTela = false }) {
@@ -4911,12 +6349,12 @@ function renderInstrucoes() {
     </div>
 
     <div class="portal-chips" style="animation-delay:${(linhas.length * 0.4 + 0.15).toFixed(2)}s">
-      <span class="chip-portal">🧠 03 DESAFIOS</span>
+      <span class="chip-portal">🧠 ${String(CONFIG.PERGUNTAS_POR_RODADA).padStart(2, "0")} DESAFIOS</span>
       <span class="chip-portal">${CONFIG.TEMPO_POR_PERGUNTA}s POR QUESTÃO</span>
       <span class="chip-portal chip-velocidade">⚡ RESPONDA RÁPIDO E PONTUE MAIS</span>
     </div>
     <div class="portal-eixos" style="animation-delay:${(linhas.length * 0.4 + 0.3).toFixed(2)}s">
-      <span>PRODUTO</span><span class="portal-eixos-sep">·</span><span>OBJEÇÃO</span><span class="portal-eixos-sep">·</span><span>REGRA DE NEGÓCIO</span><span class="portal-eixos-sep">·</span><span>CULTURA</span>
+      ${CONFIG.EIXOS.map((e) => `<span>${e.toUpperCase()}</span>`).join('<span class="portal-eixos-sep">·</span>')}
     </div>
 
     <div class="premio-alerta" id="premioAlerta" style="animation-delay:${(linhas.length * 0.4 + 0.55).toFixed(2)}s">
@@ -5209,6 +6647,7 @@ function registrarResposta(letraEscolhida, tempoEsgotado) {
     status: tempoEsgotado ? "tempo_esgotado" : correta ? "certo" : "errado",
     tempoSegundos: Math.round(tempoRespostaSeg * 10) / 10,
     nivelDificuldade: q.nivel_dificuldade || null,
+    peso: q.peso || null,
     cursoIndicado: q.curso_indicado || null,
     trilhaBumerangue: q.trilha_bumerangue || null,
     linkCurso: q.link_curso || null,
@@ -5295,12 +6734,16 @@ function registrarResposta(letraEscolhida, tempoEsgotado) {
 // pesos por dificuldade + pequeno bônus por tempo de resposta. Usada só na
 // experiência de resultado individual (mapa de sinapses) — o ranking
 // continua sendo exclusivamente acertos desc, tempo asc, como sempre foi.
+// fallback caso alguma questão venha sem peso na base; o valor real vem
+// da própria planilha (coluna NIVEL_DIFICULDADE_PESO), então esta tabela
+// só entra em ação se o dado estiver ausente
 const PESO_DIFICULDADE = { Fácil: 20, Médio: 30, Difícil: 50 };
 function calcularPontuacao(respostas) {
   let pontos = 0;
   for (const r of respostas) {
     if (r.status !== "certo") continue;
-    const peso = PESO_DIFICULDADE[r.nivelDificuldade] || 20;
+    // usa o peso que veio da planilha; a tabela fixa é só reserva
+    const peso = r.peso || PESO_DIFICULDADE[r.nivelDificuldade] || 20;
     // bônus proporcional ao tempo restante: quem responde na metade do
     // tempo leva metade do bônus máximo. Deriva de TEMPO_POR_PERGUNTA para
     // não descalibrar quando o tempo da questão mudar (com 45s e um bônus
@@ -5317,8 +6760,11 @@ function calcularPontuacao(respostas) {
 function finalizarRodada() {
   const acertos = ESTADO.respostas.filter((r) => r.status === "certo").length;
   const tempoTotalSeg = ESTADO.respostas.reduce((soma, r) => soma + r.tempoSegundos, 0);
-  const elegivelSorteio = acertos === 3;
-  const tipoBrinde = acertos >= 2 ? "especial" : "participacao";
+  // derivam do total de perguntas da rodada, não de um 3 fixo — assim
+  // continuam corretos se PERGUNTAS_POR_RODADA mudar
+  const totalPerguntas = ESTADO.respostas.length || CONFIG.PERGUNTAS_POR_RODADA;
+  const elegivelSorteio = acertos === totalPerguntas;
+  const tipoBrinde = acertos >= totalPerguntas - 1 ? "especial" : "participacao";
   const pontuacao = calcularPontuacao(ESTADO.respostas);
   // token público da tentativa — é o que vai na URL do QR Code da experiência
   // individual. Deliberadamente gerado aqui (não reaproveita o participanteId
@@ -5366,7 +6812,11 @@ function finalizarRodada() {
     elegivelSorteio: registro.elegivelSorteio,
     tipoBrinde: registro.tipoBrinde,
     brindeEntregue: registro.brindeEntregue,
-    modoTeste: CONFIG.TEST_MODE_PERMITIR_CPF_REPETIDO,
+    // usa MODO_TESTE, não a flag de CPF repetido. Antes vinha de
+    // TEST_MODE_PERMITIR_CPF_REPETIDO, o que acoplava duas decisões:
+    // liberar CPF repetido para testar marcava a participação como teste
+    // e, por consequência, o QR Code deixava de encontrar o resultado.
+    modoTeste: CONFIG.MODO_TESTE,
     respostas: registro.respostas.map((r) => ({ ...r, _syncId: gerarUUID() })),
   });
   tentarSincronizarFila(); // best-effort, não bloqueia a tela de feedback
@@ -5379,32 +6829,46 @@ function finalizarRodada() {
 // ---------- feedback final ----------
 function mensagemFeedback(registro) {
   const erradas = registro.respostas.filter((r) => r.status !== "certo");
-  const nomeCurso = (c) => c || "(curso a definir)";
 
-  if (registro.totalAcertos === 3) {
+  // A coluna TRILHA da base é o nome único do conteúdo. Ela já traz escrito
+  // se é curso ou trilha ("Trilha: Consultor PRO", "Curso - Tchan das
+  // Vendas"), então o texto ao redor não repete essas palavras — dizer
+  // "o curso Trilha: Consultor PRO" ficaria errado.
+  const nomeConteudo = (r) => (r && r.trilhaBumerangue) || "(conteúdo a definir)";
+
+  // remove repetição quando duas questões erradas apontam para o mesmo
+  // conteúdo, para não recomendar a mesma trilha duas vezes
+  const conteudosUnicos = [...new Set(erradas.map(nomeConteudo))];
+
+  const totalPerguntas = registro.respostas.length || CONFIG.PERGUNTAS_POR_RODADA;
+  if (registro.totalAcertos === totalPerguntas) {
     return {
       icone: ICONE_RAIO_SVG,
       texto: `Sua sinapse comercial está a todo vapor! Você é um consultor de excelência. Continue assim, suas conexões neurais estão no máximo! Você está concorrendo ao sorteio de hoje. Boa sorte!`,
     };
   }
-  if (registro.totalAcertos === 2) {
-    const c = erradas[0];
+  if (registro.totalAcertos === totalPerguntas - 1) {
     return {
       icone: ICONE_CONEXAO_SVG,
-      texto: `Quase lá! Sua sinapse comercial está forte, mas identificamos um ponto de conexão que pode ser reforçado. Recomendamos o curso <b>${nomeCurso(c.cursoIndicado)}</b> na Bumerangue para fortalecer essa área.`,
+      texto: `Quase lá! Sua sinapse comercial está forte, mas identificamos um ponto de conexão que pode ser reforçado. Recomendamos refazer <b>${conteudosUnicos[0]}</b> na Bumerangue para fortalecer essa área.`,
     };
   }
-  if (registro.totalAcertos === 1) {
+  if (registro.totalAcertos === totalPerguntas - 2) {
     const [e1, e2] = erradas;
+    const lista = conteudosUnicos.length > 1
+      ? `<b>${conteudosUnicos[0]}</b> e <b>${conteudosUnicos[1]}</b>`
+      : `<b>${conteudosUnicos[0]}</b>`;
     return {
       icone: ICONE_CEREBRO_SVG,
-      texto: `Sua sinapse comercial precisa de novas conexões! Identificamos oportunidades de evolução em <b>${e1.eixo}</b> e <b>${e2.eixo}</b>. Acesse os cursos <b>${nomeCurso(e1.cursoIndicado)}</b> e <b>${nomeCurso(e2.cursoIndicado)}</b> na Bumerangue e volte ainda mais preparado.`,
+      texto: `Sua sinapse comercial precisa de novas conexões! Identificamos oportunidades de evolução em <b>${e1.eixo}</b> e <b>${e2.eixo}</b>. Recomendamos refazer ${lista} na Bumerangue e voltar ainda mais preparado.`,
     };
   }
-  const link = erradas[0] && erradas[0].linkCurso ? erradas[0].linkCurso : "(link a cadastrar)";
+  const lista = conteudosUnicos.length > 1
+    ? conteudosUnicos.slice(0, 3).map((n) => `<b>${n}</b>`).join(", ")
+    : `<b>${conteudosUnicos[0]}</b>`;
   return {
     icone: ICONE_BATERIA_SVG,
-    texto: `Hora de recarregar suas conexões! Sua sinapse comercial tem muito potencial, mas precisa de reforço. Acesse a trilha completa do consultor comercial na Bumerangue: <b>${link}</b>. Cada novo aprendizado cria uma conexão que te faz chegar mais longe.`,
+    texto: `Hora de recarregar suas conexões! Sua sinapse comercial tem muito potencial, mas precisa de reforço. Recomendamos refazer ${lista} na Bumerangue. Cada novo aprendizado cria uma conexão que te faz chegar mais longe.`,
   };
 }
 
@@ -5517,7 +6981,7 @@ function renderRanking() {
               </div>
               <div class="ranking-metricas">
                 <span class="ranking-pontos">${p.pontuacao != null ? p.pontuacao : p.totalAcertos * 20} pts</span>
-                <span class="ranking-detalhe">${p.totalAcertos}/3 · ${formatarTempo(p.tempoTotalSegundos)}</span>
+                <span class="ranking-detalhe">${p.totalAcertos}/${p.respostas ? p.respostas.length : CONFIG.PERGUNTAS_POR_RODADA} · ${formatarTempo(p.tempoTotalSegundos)}</span>
               </div>
             </div>`
                 )
@@ -5594,7 +7058,7 @@ function abrirAdmin() {
             <tr>
               <td>${p.nome}</td>
               <td>${p.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4")}</td>
-              <td>${p.totalAcertos}/3</td>
+              <td>${p.totalAcertos}/${p.respostas ? p.respostas.length : CONFIG.PERGUNTAS_POR_RODADA}</td>
               <td>${formatarTempo(p.tempoTotalSegundos)}</td>
               <td>${p.elegivelSorteio ? "Sim" : "Não"}</td>
               <td><input type="checkbox" data-idx="${i}" class="chk-brinde" ${p.brindeEntregue ? "checked" : ""}/></td>

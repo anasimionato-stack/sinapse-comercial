@@ -2734,7 +2734,7 @@ const CONFIG = {
   SUPABASE_URL: "https://erdjglcztzcxewpfecls.supabase.co",
   // >>> COLE AQUI a chave "anon" do Supabase (a longa, que começa com eyJ)
   //     Settings > API Keys > aba "Legacy anon, service_role API keys"
-  SUPABASE_ANON_KEY: "COLE_AQUI_A_CHAVE_ANON",
+  SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyZGpnbGN6dHpjeGV3cGZlY2xzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyNzk0OTcsImV4cCI6MjEwMzg1NTQ5N30.YIZNetbcVeOeV8iR-Jp5gEssehv7KNPgECr7Ql7otXc",
   CHAVE_FILA_SYNC: "sinapse_comercial_fila_sync_v1",
   // Calibrado para wifi fraco de estande.
   // Sincronizar a cada 6s (em vez de 15s) faz o resultado chegar ao banco
@@ -7934,7 +7934,7 @@ function abrirAdmin() {
   // não abre nem com o PIN "certo". Sem isso, esquecer de trocar deixaria
   // os dados pessoais acessíveis a quem lesse o código-fonte do arquivo,
   // que é público no GitHub Pages.
-  const pinFraco = ["TROCAR-ESTE-PIN", "2026", "0000", "1234", ""];
+  const pinFraco = ["SUMMIT2026", "2026", "0000", "1234", ""];
   if (pinFraco.includes(String(CONFIG.ADMIN_PIN).trim())) {
     alert(
       "Painel bloqueado.\n\n" +

@@ -2712,7 +2712,7 @@ const CONFIG = {
   // ⚠️ TROQUE ANTES DO EVENTO. Este PIN abre o painel que exporta CPF,
   // nome e WhatsApp de todos os participantes. Enquanto estiver com o
   // valor abaixo, o painel se recusa a abrir — proteção contra esquecer.
-  ADMIN_PIN: "SUMMIT2026",
+  ADMIN_PIN: "TROCAR-ESTE-PIN",
   CHAVE_ARMAZENAMENTO: "sinapse_comercial_participantes_v1",
   // Eixos sorteados na rodada (1 pergunta de cada). Precisam existir na
   // base: se um eixo não tiver nenhuma pergunta, o quiz não inicia.
@@ -2734,7 +2734,7 @@ const CONFIG = {
   SUPABASE_URL: "https://erdjglcztzcxewpfecls.supabase.co",
   // >>> COLE AQUI a chave "anon" do Supabase (a longa, que começa com eyJ)
   //     Settings > API Keys > aba "Legacy anon, service_role API keys"
-  SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyZGpnbGN6dHpjeGV3cGZlY2xzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyNzk0OTcsImV4cCI6MjEwMzg1NTQ5N30.YIZNetbcVeOeV8iR-Jp5gEssehv7KNPgECr7Ql7otXc",
+  SUPABASE_ANON_KEY: "COLE_AQUI_A_CHAVE_ANON",
   CHAVE_FILA_SYNC: "sinapse_comercial_fila_sync_v1",
   // Calibrado para wifi fraco de estande.
   // Sincronizar a cada 6s (em vez de 15s) faz o resultado chegar ao banco
@@ -4269,7 +4269,7 @@ function salvarParticipantes(lista) {
 function supabaseConfigurado() {
   // Verificação robusta em vez de procurar por um texto de exemplo
   // específico: antes esta função buscava literalmente "SUA-CHAVE-ANON",
-  // e quando o placeholder mudou para "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyZGpnbGN6dHpjeGV3cGZlY2xzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyNzk0OTcsImV4cCI6MjEwMzg1NTQ5N30.YIZNetbcVeOeV8iR-Jp5gEssehv7KNPgECr7Ql7otXc" ela passou
+  // e quando o placeholder mudou para "COLE_AQUI_A_CHAVE_ANON" ela passou
   // a dar "configurado" mesmo sem chave real. O app então tentava gravar
   // com credencial inválida e guardava tudo na fila em silêncio.
   // Agora valida o FORMATO: a chave do Supabase é um JWT, sempre começa
@@ -7818,8 +7818,12 @@ function renderFeedbackFinal() {
 
   comHoverSutil($("#btnRanking"));
   comHoverSutil($("#btnNovaParticipacao"));
-  $("#btnRanking").addEventListener("click", () => {
+  $("#btnRanking").addEventListener("click", async () => {
     somClique();
+    // busca o ranking do banco antes de mostrar. Se a rede falhar, a
+    // função devolve null e a tela usa o registro local — nunca trava
+    // esperando: o timeout de rede já limita a espera.
+    RANKING_REMOTO = await buscarRankingRemoto();
     ESTADO.tela = "ranking";
     renderizar();
   });
@@ -7846,14 +7850,44 @@ const MEDALHAS = [
   `<span class="ranking-icone icone-bronze">${ICONE_MEDALHA}</span>`,
 ];
 
+// O ranking desta tela lia SÓ o armazenamento local, enquanto o ranking da
+// TV lê o Supabase. As duas telas mostravam listas diferentes: a local
+// carregava participações de teste antigas daquele navegador, que o banco
+// já não tinha. Agora a fonte é o banco, com o local como reserva para
+// quando não houver rede — assim as duas telas contam a mesma história.
+let RANKING_REMOTO = null;
+
+async function buscarRankingRemoto() {
+  if (!supabaseConfigurado()) return null;
+  try {
+    const r = await supabaseRequest(
+      "/rest/v1/ranking_publico?select=nome,loja,estado,total_acertos,tempo_total_segundos,pontuacao" +
+      "&order=total_acertos.desc,tempo_total_segundos.asc&limit=15"
+    );
+    if (!Array.isArray(r)) return null;
+    return r.map((x) => ({
+      nome: x.nome,
+      loja: x.loja,
+      estado: x.estado,
+      totalAcertos: x.total_acertos,
+      tempoTotalSegundos: x.tempo_total_segundos,
+      pontuacao: x.pontuacao,
+      respostas: null,
+    }));
+  } catch (e) {
+    return null;
+  }
+}
+
 function renderRanking() {
-  const lista = carregarParticipantes()
+  // usa o que veio do banco; sem rede, cai para o registro local
+  const lista = (RANKING_REMOTO && RANKING_REMOTO.length >= 0 ? RANKING_REMOTO : carregarParticipantes())
     .slice()
     .sort((a, b) => b.totalAcertos - a.totalAcertos || a.tempoTotalSegundos - b.tempoTotalSegundos);
 
   montar(`
     <div class="ranking-wrap">
-      <div class="eyebrow" style="text-align:center">Ranking</div>
+      <div class="eyebrow" style="text-align:center">Ranking${RANKING_REMOTO ? "" : " · deste aparelho"}</div>
       <h1 style="font-size:26px; text-align:center">Sinapse Comercial</h1>
       <div class="ranking-lista">
         ${
@@ -7900,7 +7934,7 @@ function abrirAdmin() {
   // não abre nem com o PIN "certo". Sem isso, esquecer de trocar deixaria
   // os dados pessoais acessíveis a quem lesse o código-fonte do arquivo,
   // que é público no GitHub Pages.
-  const pinFraco = ["SUMMIT2026", "2026", "0000", "1234", ""];
+  const pinFraco = ["TROCAR-ESTE-PIN", "2026", "0000", "1234", ""];
   if (pinFraco.includes(String(CONFIG.ADMIN_PIN).trim())) {
     alert(
       "Painel bloqueado.\n\n" +

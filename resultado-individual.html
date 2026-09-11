@@ -177,7 +177,12 @@ a{color:inherit;}
 const SUPABASE_URL = "https://erdjglcztzcxewpfecls.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVyZGpnbGN6dHpjeGV3cGZlY2xzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyNzk0OTcsImV4cCI6MjEwMzg1NTQ5N30.YIZNetbcVeOeV8iR-Jp5gEssehv7KNPgECr7Ql7otXc";
 const URL_RANKING_COMPLETO = "https://anasimionato-stack.github.io/sinapse-comercial/ranking-tv.html";
-const TENTATIVAS_MAX = 8;
+// Janela de espera do resultado. Calibrada para wifi fraco de estande:
+// a página só encontra o resultado depois que o quiz sincronizou aquela
+// participação com o Supabase. Com sinal ruim isso pode levar dezenas de
+// segundos, e desistir cedo faria o participante achar que deu erro.
+// 20 tentativas com intervalo crescente = até ~75 segundos de espera.
+const TENTATIVAS_MAX = 20;
 const INTERVALO_TENTATIVA_MS = 2000;
 
 function $(sel, ctx) { return (ctx || document).querySelector(sel); }
@@ -335,19 +340,31 @@ function mostrarErro(titulo, corpo, comRetentar) {
 }
 
 async function aguardarResultadoComRetry(token) {
+  // mensagens que mudam com o tempo: silêncio prolongado numa tela parada
+  // passa a impressão de travamento, mesmo quando está tudo certo
+  const avisos = [
+    [2,  "Ainda registrando seu resultado..."],
+    [6,  "Conexão lenta por aqui. Continuamos tentando..."],
+    [12, "Quase lá — seu resultado não se perde, só está a caminho."],
+  ];
   for (let i = 0; i < TENTATIVAS_MAX; i++) {
     try {
       const r = await buscarResultado(token);
       if (r) return r;
     } catch (e) {
-      // segue tentando — problema de rede momentâneo não deve travar
-      // a experiência antes das tentativas se esgotarem
+      // segue tentando: falha momentânea de rede não deve encerrar a espera
     }
-    if (i === 0) {
+    const aviso = avisos.filter(([n]) => i + 1 >= n).pop();
+    if (aviso) {
       const el = $("#textoRevelacao");
-      if (el) el.textContent = "Ainda registrando seu resultado...";
+      if (el && el.textContent !== aviso[1]) el.textContent = aviso[1];
     }
-    await new Promise((res) => setTimeout(res, INTERVALO_TENTATIVA_MS));
+    // intervalo cresce: tenta rápido no começo (caso comum, sincroniza em
+    // poucos segundos) e espaça depois, para não martelar uma rede ruim
+    const espera = i < 5 ? INTERVALO_TENTATIVA_MS
+                 : i < 12 ? INTERVALO_TENTATIVA_MS * 2
+                 : INTERVALO_TENTATIVA_MS * 3;
+    await new Promise((res) => setTimeout(res, espera));
   }
   return null;
 }
@@ -775,8 +792,8 @@ async function iniciar() {
 
   if (!dados) {
     mostrarErro(
-      "Ainda processando",
-      "Seu resultado está sendo registrado. Aguarde alguns segundos e tente de novo — ele não se perde, só está a caminho.",
+      "Seu resultado está a caminho",
+      "A conexão do local está lenta. Seu resultado foi salvo e aparece aqui assim que sincronizar — guarde este link e recarregue em alguns minutos.",
       true
     );
     return;
